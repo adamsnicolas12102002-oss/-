@@ -1,13 +1,518 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>山西洪洞大槐树｜寻根祭祖园沉浸式导览</title>
+    <meta name="description" content="走进临汾洪洞大槐树，了解明代移民历史、寻根祭祖文化与核心景点，体验沉浸式H5导览。">
+    <meta name="keywords" content="临汾洪洞大槐树,洪洞大槐树景区,洪洞大槐树寻根祭祖园,山西洪洞大槐树,大槐树景区介绍,洪洞大槐树旅游攻略">
+    <meta property="og:title" content="山西洪洞大槐树｜寻根祭祖园沉浸式导览">
+    <meta property="og:description" content="一场关于根的沉浸式文化旅程，从明代移民历史走向今天的寻根祭祖。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/images/hero-tree.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "TouristAttraction",
+            "@id": "#attraction",
+            "name": "洪洞大槐树寻根祭祖园",
+            "alternateName": ["山西洪洞大槐树", "临汾洪洞大槐树", "洪洞大槐树景区"],
+            "description": "洪洞大槐树寻根祭祖园以明代移民历史、寻根祭祖文化和姓氏文化为核心，是了解洪洞大槐树移民传说与华人寻根文化的重要景区。",
+            "touristType": ["文化旅游游客", "家族寻根用户", "历史文化爱好者"],
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "临汾市洪洞县",
+              "addressRegion": "山西省",
+              "addressCountry": "CN"
+            },
+            "image": [
+              "assets/images/hero-tree.jpg",
+              "assets/images/root-wall.jpg",
+              "assets/images/ancestor-hall.jpg"
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "#breadcrumb",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "山西旅游", "item": "#shanxi" },
+              { "@type": "ListItem", "position": 2, "name": "临汾旅游", "item": "#linfen" },
+              { "@type": "ListItem", "position": 3, "name": "洪洞大槐树", "item": "#hongdong-dahuaishu" }
+            ]
+          },
+          {
+            "@type": "Article",
+            "@id": "#history",
+            "headline": "洪洞大槐树移民历史与寻根文化",
+            "description": "介绍明代洪洞大移民、大槐树移民传说、洪洞大槐树寻根文化和核心景点。",
+            "about": ["洪洞大槐树移民历史", "明代洪洞大移民", "大槐树移民传说", "洪洞大槐树寻根文化"],
+            "image": "assets/images/relief.jpg",
+            "speakable": {
+              "@type": "SpeakableSpecification",
+              "cssSelector": [".speakable-summary"]
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "洪洞大槐树为什么有名？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "洪洞大槐树因明代大规模移民历史和寻根祭祖文化而知名，民间流传的“问我祖先在何处，山西洪洞大槐树”使这里成为许多华人追寻祖源的重要文化符号。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "洪洞大槐树是真的吗？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "景区保留了古大槐树遗址、碑亭、二三代槐树、移民浮雕图和祭祖堂等与移民记忆相关的景观。今天的大槐树更多承载的是历史遗址、民间记忆和寻根文化的综合象征。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "洪洞大槐树适合玩多久？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "常规参观建议预留2到3小时。如果要听语音导览、参观祭祖堂和中华姓氏苑，并完成拍照与寻根互动，可以安排半日游。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "洪洞大槐树在哪里？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "洪洞大槐树寻根祭祖园位于山西省临汾市洪洞县，是临汾地区重要的历史文化旅游目的地。"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <header class="topbar" aria-label="页面导航">
+      <a class="brand" href="#hero" aria-label="返回首屏">
+        <span class="brand-mark">根</span>
+        <span>洪洞大槐树</span>
+      </a>
+      <nav>
+        <a href="#story">移民史</a>
+        <a href="#tour">景点</a>
+        <a href="#roots">寻根</a>
+        <a href="#faq">问答</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <img class="hero-image" src="assets/images/hero-tree.jpg" alt="山西洪洞大槐树景区一代大槐树主视觉">
+        <div class="hero-veil"></div>
+        <div class="leaf-field" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="hero-content reveal">
+          <p class="kicker">洪洞大槐树 · 寻根之旅</p>
+          <h1 id="hero-title">问我祖先在何处<br><span>山西洪洞大槐树</span></h1>
+          <p class="hero-copy">数百年前，无数移民从这里出发。今天，我们沿着一棵树的记忆，展开一段关于家族、迁徙与归来的长卷。</p>
+          <div class="hero-actions">
+            <button class="primary-btn" type="button" data-scroll="#roots">开始寻根</button>
+            <a class="ghost-btn" href="https://www.720yun.com/t/2f2jrzmkzm4?scene_id=27864805">云游大槐树</a>
+          </div>
+        </div>
+        <a class="scroll-cue" href="#overview" aria-label="向下滑动到景区简介">向下滑动</a>
+      </section>
+
+      <section class="section intro-section" id="overview" aria-labelledby="overview-title">
+        <div class="section-heading reveal">
+          <p class="kicker">大槐树景区介绍</p>
+          <h2 id="overview-title">洪洞大槐树为什么被称为华人寻根圣地？</h2>
+        </div>
+        <div class="intro-grid">
+          <figure class="image-panel reveal">
+            <img src="assets/images/root-wall.jpg" alt="临汾洪洞大槐树根字影壁景点">
+            <figcaption>根字影壁把寻根祭祖的情绪凝成一个字。</figcaption>
+          </figure>
+          <div class="intro-copy reveal">
+            <p>洪洞大槐树寻根祭祖园以明代移民历史为主线，把“从哪里来”的追问落到景区空间里：根雕大门、根字影壁、移民浮雕图、碑亭、二三代槐树、祭祖堂与中华姓氏苑，共同组成一条从历史记忆到家族认同的游览路线。</p>
+            <ul class="seal-list">
+              <li>国家5A景区</li>
+              <li>世界华人寻根圣地</li>
+              <li>明代移民象征地</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stat-grid reveal" aria-label="景区核心信息">
+          <article class="stat-card">
+            <span>建立时间</span>
+            <strong>明洪武年间</strong>
+          </article>
+          <article class="stat-card">
+            <span>核心文化</span>
+            <strong>寻根祭祖</strong>
+          </article>
+          <article class="stat-card">
+            <span>推荐游览</span>
+            <strong>2-3小时</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="section story-section" id="story" aria-labelledby="story-title">
+        <div class="section-heading reveal">
+          <p class="kicker">大槐树传说</p>
+          <h2 id="story-title">从战乱到启程，一段被卷轴记住的迁徙史</h2>
+        </div>
+        <div class="scroll-line" aria-label="明代洪洞大移民时间线">
+          <article class="timeline-item reveal">
+            <span class="timeline-year">01</span>
+            <h3>元末战乱</h3>
+            <p>中原地区经历长期动荡，人口、土地与生产秩序都需要重新安置。</p>
+          </article>
+          <article class="timeline-item reveal">
+            <span class="timeline-year">02</span>
+            <h3>山西人口密集</h3>
+            <p>相对稳定的山西成为移民来源地之一，洪洞也被不断写入民间记忆。</p>
+          </article>
+          <article class="timeline-item reveal">
+            <span class="timeline-year">03</span>
+            <h3>明朝组织移民</h3>
+            <p>官方迁民与民间传说交织，形成今天关于洪洞大槐树的历史叙事。</p>
+          </article>
+          <article class="timeline-item with-image reveal">
+            <img src="assets/images/migration-depart.jpg" alt="大槐树下出发的明代移民雕塑">
+            <div>
+              <span class="timeline-year">04</span>
+              <h3>洪洞集结</h3>
+              <p>人们在大槐树下登记、惜别、启程，树影从此成了故乡的方向。</p>
+            </div>
+          </article>
+          <article class="timeline-item with-image reveal">
+            <img src="assets/images/relief.jpg" alt="洪洞大槐树移民浮雕图长卷">
+            <div>
+              <span class="timeline-year">05</span>
+              <h3>大槐树下出发</h3>
+              <p>移民浮雕图像青铜长卷，凝固了决策、离别与迁徙的瞬间。</p>
+            </div>
+          </article>
+          <article class="timeline-item reveal">
+            <span class="timeline-year">06</span>
+            <h3>遍布全国</h3>
+            <p>迁徙路线延伸至河南、河北、山东、安徽、江苏等地，许多家族故事由此展开。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section roots-section" id="roots" aria-labelledby="roots-title">
+        <div class="section-heading reveal">
+          <p class="kicker">你的祖先可能来自这里</p>
+          <h2 id="roots-title">输入姓氏，生成一张寻根卡</h2>
+        </div>
+        <div class="roots-layout">
+          <form class="root-form reveal" id="rootForm">
+            <label for="surnameInput">请输入你的姓氏</label>
+            <div class="input-row">
+              <input id="surnameInput" name="surname" type="text" inputmode="text" maxlength="2" placeholder="如：王" autocomplete="family-name">
+              <button class="primary-btn" type="submit">开始寻根</button>
+            </div>
+            <label for="provinceSelect">选择现在所在省份/地区</label>
+            <select id="provinceSelect" name="province">
+              <option value="北京">北京</option>
+              <option value="天津">天津</option>
+              <option value="河北">河北</option>
+              <option value="山西">山西</option>
+              <option value="内蒙古">内蒙古</option>
+              <option value="辽宁">辽宁</option>
+              <option value="吉林">吉林</option>
+              <option value="黑龙江">黑龙江</option>
+              <option value="上海">上海</option>
+              <option value="江苏">江苏</option>
+              <option value="浙江">浙江</option>
+              <option value="安徽">安徽</option>
+              <option value="福建">福建</option>
+              <option value="江西">江西</option>
+              <option value="山东">山东</option>
+              <option value="河南">河南</option>
+              <option value="湖北">湖北</option>
+              <option value="湖南">湖南</option>
+              <option value="广东">广东</option>
+              <option value="广西">广西</option>
+              <option value="海南">海南</option>
+              <option value="重庆">重庆</option>
+              <option value="四川">四川</option>
+              <option value="贵州">贵州</option>
+              <option value="云南">云南</option>
+              <option value="西藏">西藏</option>
+              <option value="陕西">陕西</option>
+              <option value="甘肃">甘肃</option>
+              <option value="青海">青海</option>
+              <option value="宁夏">宁夏</option>
+              <option value="新疆">新疆</option>
+              <option value="香港">香港</option>
+              <option value="澳门">澳门</option>
+              <option value="台湾">台湾</option>
+            </select>
+            <p class="form-note">姓氏结果为文化互动表达，正式族源仍建议结合家谱、地方志与家族口述查证。</p>
+          </form>
+          <article class="root-result reveal" id="resultCard" aria-live="polite">
+            <p class="result-label">寻根卡</p>
+            <h3 id="resultTitle">从大槐树下启程的人们</h3>
+            <p id="resultText">输入姓氏后，这里会生成一段适合分享给家人的寻根文案。</p>
+            <div class="route-chip" id="routeChip">山西洪洞 → 中原大地</div>
+            <div class="poster-actions">
+              <button class="ghost-btn" type="button" id="posterBtn">生成寻根卡</button>
+              <button class="ghost-btn" type="button" id="shareBtn">分享给家人</button>
+            </div>
+            <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
+            <textarea class="share-copy" id="shareCopy" readonly hidden aria-label="分享文案"></textarea>
+          </article>
+        </div>
+      </section>
+
+      <section class="section tour-section" id="tour" aria-labelledby="tour-title">
+        <div class="section-heading reveal">
+          <p class="kicker">景点导览</p>
+          <h2 id="tour-title">沿着“根”的线索，走进核心点位</h2>
+        </div>
+        <div class="stamp-dock reveal" aria-live="polite">
+          <span id="stampCount">电子印章 0/6</span>
+          <button type="button" id="resetStamps">清空印章</button>
+        </div>
+        <div class="spot-track reveal" aria-label="洪洞大槐树景点导览卡片">
+          <article class="spot-card">
+            <img src="assets/images/root-wall.jpg" alt="洪洞大槐树根字影壁旅游攻略点位">
+            <div class="spot-body">
+              <h3>根字影壁</h3>
+              <p>景区标志性景观，一个“根”字把海内外游子的思乡之情聚在入园第一眼。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/root-wall.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>适合作为第一张打卡照片，也适合承接“我从哪里来”的寻根主题。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="根字影壁">电子盖章</button>
+            </div>
+          </article>
+          <article class="spot-card">
+            <img src="assets/images/ancestor-hall.jpg" alt="洪洞大槐树祭祖堂景点介绍">
+            <div class="spot-body">
+              <h3>祭祖堂</h3>
+              <p>堂内供奉移民先祖姓氏牌位，是许多游客完成寻根祭祖仪式的核心空间。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/ancestor-hall.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>这里更适合安静停留，把姓氏、家族和迁徙故事联系起来。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="祭祖堂">电子盖章</button>
+            </div>
+          </article>
+          <article class="spot-card">
+            <img src="assets/images/ancient-tree.jpg" alt="洪洞大槐树二三代槐树寻根文化">
+            <div class="spot-body">
+              <h3>二、三代槐树</h3>
+              <p>老树与新枝形成对照，象征血脉亲情虽经岁月仍然绵延。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/ancient-tree.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>许多游客会在这里系上祈福带，表达家族兴旺与血脉延续的愿望。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="二、三代槐树">电子盖章</button>
+            </div>
+          </article>
+          <article class="spot-card">
+            <img src="assets/images/relief.jpg" alt="洪洞大槐树移民浮雕图明代移民历史">
+            <div class="spot-body">
+              <h3>移民浮雕图</h3>
+              <p>长卷式浮雕再现移民国策、离别与迁徙，是理解明代洪洞大移民的重点。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/relief.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>建议放慢脚步，从人物姿态里看见迁徙故事的层层推进。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="移民浮雕图">电子盖章</button>
+            </div>
+          </article>
+          <article class="spot-card">
+            <img src="assets/images/surname-garden.jpg" alt="洪洞大槐树中华姓氏苑姓氏文化">
+            <div class="spot-body">
+              <h3>中华姓氏苑</h3>
+              <p>姓氏源流、郡望堂号与家族记忆在这里集中呈现，适合深度寻根用户。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/surname-garden.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>可把姓氏查询和家族故事分享结合起来，形成个人化参观记忆。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="中华姓氏苑">电子盖章</button>
+            </div>
+          </article>
+          <article class="spot-card">
+            <img src="assets/images/exhibition.jpg" alt="洪洞大槐树移民实证展览馆历史故事">
+            <div class="spot-body">
+              <h3>移民实证展览馆</h3>
+              <p>展馆用文献、器物和场景把传说落到史料之中，适合历史文化爱好者。</p>
+              <button class="audio-btn" type="button" data-audio="assets/audio/exhibition.mp3">语音导览</button>
+              <details>
+                <summary>查看详情</summary>
+                <p>这里能补足“为什么迁、迁到哪里、如何记住”的知识线索。</p>
+              </details>
+              <button class="stamp-btn" type="button" data-stamp="移民实证展览馆">电子盖章</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section map-section" aria-labelledby="map-title">
+        <div class="section-heading reveal">
+          <p class="kicker">家族迁徙路线</p>
+          <h2 id="map-title">山西出发，路线在旧地图上发光</h2>
+        </div>
+        <div class="map-wrap reveal">
+          <div class="map-copy">
+            <p>明代洪洞移民的记忆，常被讲成一条从山西向外延展的路线。它经过河南、河北、山东，也向安徽、江苏等地散开，最终变成不同家族口口相传的祖源故事。</p>
+            <button class="ghost-btn" type="button" id="speakBtn">朗读摘要</button>
+          </div>
+          <svg class="migration-map" viewBox="0 0 760 440" role="img" aria-label="山西到河南、河北、山东、安徽、江苏的明代移民路线示意图">
+            <rect x="0" y="0" width="760" height="440" rx="8"></rect>
+            <path class="land-line" d="M88 84 C180 34 260 58 336 105 C414 153 520 120 636 172 C690 196 708 260 670 320 C620 394 486 390 396 360 C292 326 226 380 124 332 C52 298 32 220 70 160 Z"></path>
+            <path class="route route-main" d="M260 178 C314 188 338 215 380 224 C430 236 462 260 505 292 C548 324 596 328 638 352"></path>
+            <path class="route route-alt" d="M260 178 C302 130 354 122 408 142 C458 160 506 152 566 178"></path>
+            <path class="route route-alt second" d="M260 178 C314 230 322 278 368 308 C410 336 456 330 508 352"></path>
+            <g class="map-point origin"><circle cx="260" cy="178" r="10"></circle><text x="232" y="158">山西</text></g>
+            <g class="map-point"><circle cx="380" cy="224" r="7"></circle><text x="355" y="212">河南</text></g>
+            <g class="map-point"><circle cx="566" cy="178" r="7"></circle><text x="544" y="164">河北</text></g>
+            <g class="map-point"><circle cx="638" cy="352" r="7"></circle><text x="612" y="382">江苏</text></g>
+            <g class="map-point"><circle cx="508" cy="352" r="7"></circle><text x="486" y="382">安徽</text></g>
+            <g class="map-point"><circle cx="505" cy="292" r="7"></circle><text x="486" y="282">山东</text></g>
+            <circle class="traveler" cx="260" cy="178" r="6"></circle>
+          </svg>
+        </div>
+        <p class="speakable-summary reveal">洪洞大槐树以明代移民历史闻名，景区通过根字影壁、移民浮雕图、古大槐树遗址、祭祖堂和中华姓氏苑，呈现从历史迁徙到家族寻根的完整文化体验。</p>
+      </section>
+
+      <section class="section seo-section" aria-labelledby="seo-title">
+        <div class="section-heading reveal">
+          <p class="kicker">实用游玩攻略</p>
+          <h2 id="seo-title">洪洞大槐树怎么玩？一屏看懂路线、门票与周边</h2>
+        </div>
+        <div class="search-strip reveal" aria-label="洪洞大槐树搜索关键词">
+          <span>洪洞大槐树旅游攻略</span>
+          <span>洪洞大槐树门票</span>
+          <span>洪洞大槐树一日游</span>
+          <span>洪洞大槐树自驾攻略</span>
+          <span>洪洞大槐树附近景点</span>
+        </div>
+        <div class="answer-grid">
+          <article class="answer-card reveal">
+            <h3>洪洞大槐树旅游攻略</h3>
+            <p>推荐从根雕大门进入，依次游览根字影壁、移民浮雕图、碑亭、二三代槐树、祭祖堂与中华姓氏苑。拍照点集中在根字影壁、祭祖广场和大槐树本体。</p>
+          </article>
+          <article class="answer-card reveal">
+            <h3>洪洞大槐树门票</h3>
+            <p>门票、优惠政策与开放时间会随季节和活动调整，出行前建议以景区当日公告、官方公众号或购票平台展示为准。</p>
+          </article>
+          <article class="answer-card reveal">
+            <h3>洪洞大槐树一日游</h3>
+            <p>上午走寻根主线，下午补充移民实证展览馆、民俗院落与周边联动景点。时间充裕可与广胜寺、苏三监狱、临汾博物馆组合成文化线路。</p>
+          </article>
+          <article class="answer-card reveal">
+            <h3>洪洞大槐树自驾攻略</h3>
+            <p>自驾可直接导航“洪洞大槐树寻根祭祖园”。节假日建议提前查看停车场信息，预留入园、拍照和祭祖堂排队时间。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section culture-section" aria-labelledby="culture-title">
+        <div class="section-heading reveal">
+          <p class="kicker">历史文化</p>
+          <h2 id="culture-title">从明代移民到寻根祭祖，读懂大槐树的文化故事</h2>
+        </div>
+        <div class="culture-grid">
+          <article class="culture-card reveal">
+            <h3>洪洞大槐树移民历史</h3>
+            <p>讲清明代移民背景、山西人口迁徙和洪洞作为集散记忆的形成过程。</p>
+          </article>
+          <article class="culture-card reveal">
+            <h3>大槐树移民传说</h3>
+            <p>围绕“问我祖先在何处”、老鹳窝传说和槐树送别文化展开。</p>
+          </article>
+          <article class="culture-card reveal">
+            <h3>洪洞大槐树寻根文化</h3>
+            <p>连接华人寻根、家族祭祖、姓氏文化与今天的旅游传播场景。</p>
+          </article>
+          <article class="culture-card reveal">
+            <h3>明代洪洞大移民</h3>
+            <p>用时间线和路线图解释洪武年间迁民、覆盖省份和人口迁徙路径。</p>
+          </article>
+          <article class="culture-card reveal">
+            <h3>洪洞大槐树历史故事</h3>
+            <p>以离乡、登记、折枝、启程等场景，把宏大历史变成可感知的故事。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section faq-section" id="faq" aria-labelledby="faq-title">
+        <div class="section-heading reveal">
+          <p class="kicker">游客常见问答</p>
+          <h2 id="faq-title">去洪洞大槐树前，先看这些问题</h2>
+        </div>
+        <div class="faq-list reveal">
+          <details open>
+            <summary>洪洞大槐树为什么有名？</summary>
+            <p>它因明代移民历史和“问我祖先在何处，山西洪洞大槐树”的民间记忆而有名，是很多华人了解祖源、家族迁徙和寻根祭祖文化的重要地点。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树是真的吗？</summary>
+            <p>今天的景区包含古大槐树遗址、碑亭、二三代槐树、移民浮雕图等景观。它既有遗址和实物，也承载了几百年民间传说与集体记忆。</p>
+          </details>
+          <details>
+            <summary>哪些姓氏来自洪洞大槐树？</summary>
+            <p>景区姓氏文化覆盖广泛，但具体家族是否源自洪洞大槐树，需要结合家谱、地方志、祖辈口述和迁徙路线综合判断。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树值得去吗？</summary>
+            <p>如果你喜欢历史文化、姓氏寻根、古建筑和民俗故事，这里很值得去。它不是单纯看一棵树，而是看一段关于迁徙和归属的文化旅程。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树适合玩多久？</summary>
+            <p>一般建议2到3小时。若要慢慢听语音导览、参观展馆、拍照和完成寻根互动，可以安排半日游。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树在哪里？</summary>
+            <p>洪洞大槐树寻根祭祖园位于山西省临汾市洪洞县，是临汾文化旅游线路中的代表性景区。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树开放时间是什么？</summary>
+            <p>开放时间可能因季节、节庆活动和景区安排调整。出行前建议查看景区当日公告或官方购票入口。</p>
+          </details>
+          <details>
+            <summary>洪洞大槐树游玩路线推荐</summary>
+            <p>推荐路线为根雕大门、根字影壁、移民浮雕图、碑亭、二三代槐树、祭祖堂、中华姓氏苑、移民实证展览馆，最后到民俗院落或周边景点延展。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="final-section" aria-labelledby="final-title">
+        <img src="assets/images/home-wall.jpg" alt="洪洞大槐树家字景墙与寻根文化氛围">
+        <div class="final-content reveal">
+          <p>故乡或许遥远。</p>
+          <h2 id="final-title">但很多人的根，都曾在这里停留。</h2>
+          <div class="hero-actions">
+            <button class="primary-btn" type="button" id="favoriteBtn">收藏页面</button>
+            <button class="ghost-btn" type="button" data-scroll="#roots">生成寻根卡</button>
+            <button class="ghost-btn" type="button" data-scroll="#tour">开启语音导览</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <audio id="guideAudio" preload="none"></audio>
+    <script src="app.js"></script>
   </body>
 </html>
-
