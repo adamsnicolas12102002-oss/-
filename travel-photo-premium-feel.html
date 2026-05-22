@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅行照片想有高级感，最重要的是什么？</title>
+  <style>
+    :root {
+      --ink: #20272a;
+      --soft-ink: #526067;
+      --paper: #f7f3ea;
+      --white: #ffffff;
+      --line: rgba(32, 39, 42, 0.14);
+      --deep: #253735;
+      --sage: #52796f;
+      --rust: #b76548;
+      --sand: #d6b36a;
+      --blue: #3f6f8f;
+      --shadow: 0 18px 45px rgba(32, 39, 42, 0.13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero {
+      min-height: 86vh;
+      position: relative;
+      display: grid;
+      align-items: end;
+      overflow: hidden;
+      background: var(--deep);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(18, 29, 30, 0.12), rgba(18, 29, 30, 0.36) 46%, rgba(18, 29, 30, 0.86)),
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1900&q=84") center/cover;
+      transform: scale(1.02);
+    }
+
+    .hero-inner {
+      position: relative;
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 88px 0 68px;
+      color: #fff;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f6ca73;
+      box-shadow: 0 0 0 5px rgba(246, 202, 115, 0.18);
+    }
+
+    h1 {
+      max-width: 950px;
+      margin: 22px 0 18px;
+      font-size: clamp(42px, 7vw, 84px);
+      line-height: 1.03;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: clamp(17px, 2vw, 24px);
+    }
+
+    .answer {
+      position: relative;
+      z-index: 2;
+      width: min(1120px, calc(100% - 32px));
+      margin: -38px auto 0;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .panel,
+    .card,
+    .mistake-card,
+    .formula-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 28px;
+    }
+
+    .label {
+      color: var(--rust);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .panel h2,
+    .section h2 {
+      margin: 8px 0 12px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .panel h2 {
+      font-size: clamp(28px, 3vw, 40px);
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--soft-ink);
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .keywords span {
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: var(--deep);
+      background: #f2e7d1;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .section {
+      width: min(1120px, calc(100% - 32px));
+      margin: 56px auto;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      font-size: clamp(28px, 4vw, 46px);
+    }
+
+    .section-head p {
+      max-width: 480px;
+      margin: 0;
+      color: var(--soft-ink);
+    }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      overflow: hidden;
+      box-shadow: none;
+      background: var(--white);
+    }
+
+    .card-photo {
+      height: 175px;
+      position: relative;
+    }
+
+    .card-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 42%, rgba(0, 0, 0, 0.48));
+    }
+
+    .card-photo span {
+      position: absolute;
+      left: 14px;
+      bottom: 12px;
+      z-index: 1;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    .card-body h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .card-body p {
+      margin: 0;
+      color: var(--soft-ink);
+      font-size: 15px;
+    }
+
+    .formula {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .formula-card {
+      padding: 24px;
+      box-shadow: none;
+      background: var(--white);
+    }
+
+    .formula-card h3 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .steps {
+      display: grid;
+      gap: 13px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border-radius: 8px;
+      background: #f4f8f5;
+    }
+
+    .step b {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--sage);
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .step span {
+      color: var(--soft-ink);
+      font-size: 15px;
+    }
+
+    .compare {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .compare-row:last-child {
+      border-bottom: 0;
+    }
+
+    .compare-row > div {
+      padding: 15px;
+      min-height: 72px;
+    }
+
+    .compare-row > div:first-child {
+      background: #fff4f0;
+      border-right: 1px solid var(--line);
+    }
+
+    .compare-row > div:last-child {
+      background: #f2f8f6;
+    }
+
+    .compare strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .compare span {
+      color: var(--soft-ink);
+      font-size: 15px;
+    }
+
+    .mistakes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .mistake-card {
+      padding: 22px;
+      box-shadow: none;
+      background: var(--white);
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 900;
+    }
+
+    .mistake-card:nth-child(2) .mark {
+      background: var(--rust);
+    }
+
+    .mistake-card:nth-child(3) .mark {
+      background: var(--sage);
+    }
+
+    .mistake-card h3 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .mistake-card p {
+      margin: 0;
+      color: var(--soft-ink);
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: var(--deep);
+      color: #fff;
+    }
+
+    .check-photo {
+      min-height: 430px;
+    }
+
+    .check-content {
+      padding: clamp(24px, 4vw, 46px);
+      align-self: center;
+    }
+
+    .check h2 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.15;
+    }
+
+    .check ul {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .check li {
+      display: grid;
+      grid-template-columns: 25px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .check li::before {
+      content: "✓";
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      margin-top: 2px;
+      color: var(--deep);
+      background: var(--sand);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .footer {
+      width: min(1120px, calc(100% - 32px));
+      margin: 42px auto 34px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--soft-ink);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1040px) {
+      .principles {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .answer,
+      .formula,
+      .check {
+        grid-template-columns: 1fr;
+      }
+
+      .mistakes {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .section-head p {
+        margin-top: 8px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        min-height: 82vh;
+      }
+
+      .hero-inner {
+        padding-bottom: 56px;
+      }
+
+      .answer {
+        margin-top: -26px;
+      }
+
+      .panel,
+      .formula-card,
+      .mistake-card {
+        padding: 20px;
+      }
+
+      .principles,
+      .mistakes {
+        grid-template-columns: 1fr;
+      }
+
+      .card-photo {
+        height: 220px;
+      }
+
+      .compare-row {
+        grid-template-columns: 1fr;
+      }
+
+      .compare-row > div:first-child {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .check-photo {
+        min-height: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">出片旅行常见问题</div>
+      <h1>旅行照片想有高级感，最重要的是什么？</h1>
+      <p>不是设备、不是滤镜，也不是把每张图都修得很“大片”。最重要的是克制：画面干净、情绪稳定、颜色统一、人物自然。</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="answer" aria-label="核心回答">
+      <article class="panel">
+        <div class="label">核心答案</div>
+        <h2>高级感的本质，是让照片看起来“不费力”。</h2>
+        <p>一张旅行照如果什么都想要：天空要炸、裙摆要飞、滤镜要重、姿势要满，反而会显得用力。高级感通常来自留白、秩序、低饱和色彩和自然状态。</p>
+      </article>
+
+      <aside class="panel">
+        <div class="label">记住这 5 个词</div>
+        <h2>少一点，反而更好看</h2>
+        <p>拍之前先问：这张图里有没有多余的人、多余的颜色、多余的动作、多余的道具？</p>
+        <div class="keywords">
+          <span>干净背景</span>
+          <span>柔和光线</span>
+          <span>统一色彩</span>
+          <span>自然姿态</span>
+          <span>适度留白</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="label">高级感来源</div>
+          <h2>真正拉开差距的 5 件事</h2>
+        </div>
+        <p>旅行照片的高级感，往往不是拍摄技术突然变强，而是你开始主动减少画面里的干扰。</p>
+      </div>
+
+      <div class="principles">
+        <article class="card">
+          <div class="card-photo">
+            <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=82" alt="留白感旅行照片">
+            <span>01 留白</span>
+          </div>
+          <div class="card-body">
+            <h3>让画面有呼吸</h3>
+            <p>不要把人塞满画面。海、天空、墙面、草地都可以成为留白。</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-photo">
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=82" alt="柔和光线下的旅行场景">
+            <span>02 光线</span>
+          </div>
+          <div class="card-body">
+            <h3>避开硬光和乱影</h3>
+            <p>清晨、傍晚、阴天、窗边光更容易拍出柔和质感。</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-photo">
+            <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=82" alt="城市旅行色彩统一">
+            <span>03 色彩</span>
+          </div>
+          <div class="card-body">
+            <h3>全图别超过三种主色</h3>
+            <p>衣服、背景、道具尽量同一色系，照片会立刻显得更贵。</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-photo">
+            <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=82" alt="自然姿态旅行照片">
+            <span>04 姿态</span>
+          </div>
+          <div class="card-body">
+            <h3>像在旅行，不像在表演</h3>
+            <p>走路、看远处、整理头发、坐下，比刻意比手势更耐看。</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-photo">
+            <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=82" alt="有秩序感的山野旅行照片">
+            <span>05 秩序</span>
+          </div>
+          <div class="card-body">
+            <h3>线条清楚，主体明确</h3>
+            <p>路、桥、门、窗、海岸线都能帮画面建立秩序感。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="label">操作公式</div>
+          <h2>拍之前按这个顺序做</h2>
+        </div>
+        <p>先控制环境，再控制人，最后才是修图。顺序反了，照片很容易越修越脏。</p>
+      </div>
+
+      <div class="formula">
+        <article class="formula-card">
+          <h3>高级感 4 步法</h3>
+          <div class="steps">
+            <div class="step">
+              <b>1</b>
+              <div><strong>先找干净背景</strong><span>墙、海、天空、远山、街角立面，越少杂物越好。</span></div>
+            </div>
+            <div class="step">
+              <b>2</b>
+              <div><strong>再等柔和光线</strong><span>脸上没有硬阴影，照片质感就已经赢了一半。</span></div>
+            </div>
+            <div class="step">
+              <b>3</b>
+              <div><strong>人物动作降到最低</strong><span>不用“摆”，只要走、停、看、坐、回头。</span></div>
+            </div>
+            <div class="step">
+              <b>4</b>
+              <div><strong>后期只做统一</strong><span>亮度、色温、饱和度统一，不要把滤镜当主角。</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="formula-card">
+          <h3>普通感 vs 高级感</h3>
+          <div class="compare">
+            <div class="compare-row">
+              <div><strong>普通感</strong><span>背景里人、车、招牌很多，主体被淹没。</span></div>
+              <div><strong>高级感</strong><span>背景简单，第一眼就知道要看谁。</span></div>
+            </div>
+            <div class="compare-row">
+              <div><strong>普通感</strong><span>颜色很多，衣服和环境互相抢戏。</span></div>
+              <div><strong>高级感</strong><span>衣服和环境有呼应，整体像一组图。</span></div>
+            </div>
+            <div class="compare-row">
+              <div><strong>普通感</strong><span>动作过满，表情紧张，像在完成任务。</span></div>
+              <div><strong>高级感</strong><span>动作自然，情绪放松，像刚好被记录。</span></div>
+            </div>
+            <div class="compare-row">
+              <div><strong>普通感</strong><span>滤镜很重，天空太蓝，皮肤太亮。</span></div>
+              <div><strong>高级感</strong><span>后期轻，保留真实光影和质感。</span></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="label">常见误区</div>
+          <h2>这些做法最容易显得用力</h2>
+        </div>
+      </div>
+
+      <div class="mistakes">
+        <article class="mistake-card">
+          <div class="mark">滤</div>
+          <h3>滤镜太重</h3>
+          <p>高级感不是“颜色更猛”，而是颜色更统一。饱和度、清晰度、锐化都要轻一点。</p>
+        </article>
+        <article class="mistake-card">
+          <div class="mark">摆</div>
+          <h3>动作太满</h3>
+          <p>大幅度甩头、夸张裙摆、连续比手势，很容易让照片变成摆拍痕迹。</p>
+        </article>
+        <article class="mistake-card">
+          <div class="mark">满</div>
+          <h3>画面太满</h3>
+          <p>想把景点、人、道具、天空都塞进去，结果没有重点。高级感需要取舍。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="check">
+        <div class="check-photo">
+          <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1100&q=82" alt="高级感旅行照片检查清单">
+        </div>
+        <div class="check-content">
+          <h2>按下快门前，看这 6 项</h2>
+          <ul>
+            <li>背景里有没有多余路人、垃圾桶、广告牌、杂乱电线。</li>
+            <li>脸上有没有硬阴影，眼下和鼻翼是否太黑。</li>
+            <li>衣服颜色是否和环境打架，画面主色是否太多。</li>
+            <li>人物动作是否自然，肩膀、手、表情有没有紧绷。</li>
+            <li>画面四周是否太满，能不能退后一步留出空间。</li>
+            <li>这张照片是否能用一句话说清：人在什么地方，是什么情绪。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    记住一句话：旅行照的高级感，不是把照片做复杂，而是把干扰变少，把情绪留下。
+  </footer>
+</body>
+</html>
