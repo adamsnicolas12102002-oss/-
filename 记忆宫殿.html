@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>记忆宫殿 - 课堂记忆挑战</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --primary:#6366f1;--primary-light:#818cf8;--secondary:#f472b6;
+  --accent:#fbbf24;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  --bg-dark:#0f172a;--bg-card:#1e293b;--bg-card-hover:#334155;
+  --text-primary:#f8fafc;--text-secondary:#94a3b8;--border-color:#475569;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Nunito,Noto Sans SC,sans-serif;background:var(--bg-dark);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
+#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#particleCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;pointer-events:none}
+.app-container{position:relative;z-index:1;min-height:100vh;padding:1rem;max-width:1200px;margin:0 auto}
+
+/* ===== 大屏适配 ===== */
+@media(min-width:1024px){
+  .app-container{padding:1.5rem 3rem}
+  .game-grid{max-width:700px!important}
+  .game-card{height:170px!important;border-radius:1.2rem}
+  .game-card .card-content{font-size:1.8rem!important}
+  .game-card .card-hint{font-size:.9rem!important}
+  .btn{padding:1rem 2rem!important;font-size:1.1rem!important;border-radius:1rem!important}
+  .btn-main{padding:1.4rem 3rem!important;font-size:1.4rem!important}
+  .countdown{font-size:6rem!important}
+  .phase-title{font-size:2rem!important}
+}
+@media(min-width:1440px){
+  .app-container{padding:2rem 5rem}
+  .game-grid{max-width:760px!important}
+  .game-card{height:190px!important}
+  .game-card .card-content{font-size:2rem!important}
+  .btn-main{padding:1.6rem 4rem!important;font-size:1.6rem!important}
+}
+
+/* ===== 通用组件 ===== */
+.card{background:var(--bg-card);border-radius:1rem;border:2px solid var(--border-color);transition:all .3s ease}
+.card:hover{border-color:var(--primary-light);transform:translateY(-2px)}
+.btn{font-family:Nunito,sans-serif;font-weight:700;padding:.75rem 1.5rem;border-radius:.75rem;border:none;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-size:1rem}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;box-shadow:0 4px 15px #6366f166}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px #6366f180}
+.btn-secondary{background:linear-gradient(135deg,var(--secondary),#f9a8d4);color:#fff;box-shadow:0 4px 15px #f472b666}
+.btn-success{background:linear-gradient(135deg,var(--success),#34d399);color:#fff;box-shadow:0 4px 15px #10b98166}
+.btn-warning{background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;box-shadow:0 4px 15px #f59e0b66}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#f87171);color:#fff;box-shadow:0 4px 15px #ef444466}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:2px solid var(--border-color)}
+.btn-ghost:hover{border-color:var(--primary-light);color:var(--primary-light)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* 主按钮 - 课堂用 */
+.btn-main{background:linear-gradient(135deg,#fbbf24,#f97316);color:#fff;font-size:1.3rem;padding:1.2rem 2.5rem;border-radius:1rem;box-shadow:0 6px 25px rgba(251,191,36,.4);animation:mainPulse 2s infinite}
+.btn-main:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 30px rgba(251,191,36,.5)}
+@keyframes mainPulse{0%,to{box-shadow:0 6px 25px rgba(251,191,36,.4)}50%{box-shadow:0 6px 35px rgba(251,191,36,.6)}}
+
+/* ===== 游戏卡片 ===== */
+.game-card{position:relative;height:140px;background:var(--bg-card);border-radius:1rem;border:3px solid var(--border-color);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;overflow:hidden}
+.game-card:hover{transform:scale(1.05);border-color:var(--primary-light);box-shadow:0 8px 25px #6366f14d}
+.game-card.selected{border-color:var(--accent);box-shadow:0 0 20px #fbbf2480}
+.game-card.correct{border-color:var(--success);box-shadow:0 0 20px #10b98180;animation:correctPulse .5s ease}
+.game-card.wrong{border-color:var(--danger);box-shadow:0 0 20px #ef444480;animation:wrongShake .5s ease}
+.game-card.missed{border-color:var(--warning);border-style:dashed;box-shadow:0 0 20px #f59e0b80}
+.game-card.dimmed{opacity:.4;border-color:var(--border-color)}
+@keyframes correctPulse{0%,to{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes wrongShake{0%,to{transform:translate(0)}25%{transform:translate(-5px)}75%{transform:translate(5px)}}
+
+.card-badge{position:absolute;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff;z-index:10;animation:badgePop .3s ease}
+@keyframes badgePop{0%{transform:scale(0)}to{transform:scale(1)}}
+.select-badge{top:-6px;right:-6px;background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 2px 8px #fbbf2480}
+.correct-badge{top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;background:linear-gradient(135deg,#10b981,#34d399);font-size:1.3rem}
+.wrong-badge{top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;background:linear-gradient(135deg,#ef4444,#f87171);font-size:1.3rem}
+.missed-badge{top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;background:linear-gradient(135deg,#f59e0b,#fbbf24);font-size:1.3rem}
+
+/* ===== 关卡节点 ===== */
+.level-node{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;cursor:pointer;transition:all .3s ease;position:relative}
+.level-node.locked{background:var(--bg-card);border:3px solid var(--border-color);color:var(--text-secondary);cursor:not-allowed}
+.level-node.unlocked{background:linear-gradient(135deg,var(--primary),var(--primary-light));border:3px solid var(--primary-light);color:#fff;box-shadow:0 4px 15px #6366f166}
+.level-node.completed{background:linear-gradient(135deg,var(--success),#34d399);border:3px solid var(--success);color:#fff;box-shadow:0 4px 15px #10b98166}
+.level-node.current{animation:currentPulse 2s infinite}
+@keyframes currentPulse{0%,to{box-shadow:0 0 #6366f1b3;transform:scale(1)}50%{box-shadow:0 0 0 12px #6366f100;transform:scale(1.05)}}
+.stars{display:flex;gap:2px}.star{color:var(--accent);font-size:1rem}.star.empty{color:var(--border-color)}
+
+/* ===== 倒计时 ===== */
+.countdown{font-size:4rem;font-weight:800;color:var(--accent);text-shadow:0 0 30px rgba(251,191,36,.5);animation:countdownPop 1s ease}
+.countdown.warning{color:var(--danger);text-shadow:0 0 30px rgba(239,68,68,.5);animation:countdownPulse .5s infinite}
+@keyframes countdownPop{0%{transform:scale(1.5);opacity:0}50%{transform:scale(1.2)}to{transform:scale(1);opacity:1}}
+@keyframes countdownPulse{0%,to{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* ===== 学科标签 ===== */
+.subject-tag{display:inline-flex;align-items:center;gap:.5rem;padding:.2rem .6rem;border-radius:9999px;font-size:.7rem;font-weight:600}
+.subject-tag.math{background:#3b82f633;color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.subject-tag.chinese{background:#ef444433;color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.subject-tag.english{background:#10b98133;color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.subject-tag.custom{background:#a855f733;color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+.subject-tag.science{background:#10b98133;color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.subject-tag.geography{background:#0ea5e933;color:#38bdf8;border:1px solid rgba(14,165,233,.3)}
+
+/* ===== 开关 ===== */
+.toggle{width:50px;height:26px;background:var(--bg-card);border:2px solid var(--border-color);border-radius:13px;position:relative;cursor:pointer;transition:all .3s ease}
+.toggle.active{background:var(--primary);border-color:var(--primary-light)}
+.toggle-dot{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:all .3s ease}
+.toggle.active .toggle-dot{left:calc(100% - 20px)}
+
+/* ===== 动画 ===== */
+.fade-in{animation:fadeIn .5s ease}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.slide-in{animation:slideIn .5s ease}
+@keyframes slideIn{0%{opacity:0;transform:translate(-20px)}to{opacity:1;transform:translate(0)}}
+.scale-in{animation:scaleIn .3s ease}
+@keyframes scaleIn{0%{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+body.no-animation .fade-in,body.no-animation .slide-in,body.no-animation .scale-in{animation:none!important}
+body.no-animation .game-card{transform:none!important}
+body.no-animation .game-card:hover{transform:none!important;box-shadow:none!important}
+body.no-animation .countdown{animation:none!important}
+body.no-animation .level-node.current{animation:none!important;box-shadow:0 4px 15px #6366f166!important}
+body.no-animation .btn-main{animation:none!important}
+body.no-animation *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+
+/* ===== 分享成绩弹窗 ===== */
+.share-overlay{position:fixed;inset:0;background:#000b;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.share-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid var(--accent);border-radius:1.5rem;padding:2rem;text-align:center;max-width:400px;width:100%}
+.share-card h3{font-size:1.5rem;color:var(--accent);margin-bottom:1rem}
+
+/* ===== 创建卡组优化 ===== */
+.create-section{margin-top:1.5rem}
+.create-section .method-card{background:var(--bg-card);border:2px solid var(--border-color);border-radius:1rem;padding:1.5rem;margin-bottom:1rem}
+.create-section .method-card:hover{border-color:var(--primary-light)}
+
+/* ===== 快速选择学科 ===== */
+.quick-subjects{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin:1.5rem 0}
+.quick-subject-btn{background:var(--bg-card);border:2px solid var(--border-color);border-radius:.75rem;padding:.75rem 1rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.5rem;color:var(--text-primary);font-weight:600}
+.quick-subject-btn:hover{border-color:var(--primary-light);transform:translateY(-2px)}
+.quick-subject-btn.active{border-color:var(--accent);box-shadow:0 0 15px #fbbf2440}
+
+/* ===== 步骤引导 ===== */
+.step-guide{display:flex;align-items:center;justify-content:center;gap:.75rem;margin:1.5rem 0;color:var(--text-secondary);font-size:.9rem}
+.step-guide .step{display:flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:2rem;background:#ffffff10}
+.step-guide .step.active{background:#fbbf2430;color:var(--accent)}
+.step-guide .arrow{color:#475569}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg-dark);border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--primary-light)}
+@media(max-width:640px){.level-node{width:45px;height:45px;font-size:1rem}.countdown{font-size:3rem}.game-card{height:110px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<canvas id="particleCanvas"></canvas>
+<div id="app"></div>
+
+<script>
+// ========== 常量 ==========
+const TOTAL_LEVELS = 15;
+const BASE_CARDS = 4;
+const DISTRACTOR_RATIO = 2;
+const STORAGE_KEY = 'memory_palace_v4';
+
+// ========== 内置卡组 ==========
+function getDefaultCategories(){
+  return [
+    {id:'math_shapes',name:'数学图形',subject:'math',icon:'fa-calculator',color:'#3b82f6',isCustom:false,cards:[
+      {name:'圆形',icon:'fa-circle',color:'#3b82f6'},{name:'正方形',icon:'fa-square',color:'#ef4444'},
+      {name:'三角形',icon:'fa-play',color:'#10b981'},{name:'长方形',icon:'fa-rectangle-wide',color:'#f59e0b'},
+      {name:'菱形',icon:'fa-diamond',color:'#8b5cf6'},{name:'五边形',icon:'fa-pentagon',color:'#ec4899'},
+      {name:'六边形',icon:'fa-hexagon',color:'#06b6d4'},{name:'星形',icon:'fa-star',color:'#fbbf24'},
+      {name:'心形',icon:'fa-heart',color:'#f43f5e'},{name:'十字形',icon:'fa-plus',color:'#6366f1'},
+      {name:'椭圆',icon:'fa-circle-notch',color:'#14b8a6'},{name:'箭头',icon:'fa-arrow-up',color:'#f97316'}
+    ].map(c=>({...c,id:`math::${c.name}`,type:'icon'}))},
+    {id:'chinese_chars',name:'常用汉字',subject:'chinese',icon:'fa-book-open',color:'#ef4444',isCustom:false,cards:[
+      {name:'大',color:'#ef4444'},{name:'小',color:'#f97316'},{name:'中',color:'#fbbf24'},
+      {name:'人',color:'#84cc16'},{name:'天',color:'#22c55e'},{name:'地',color:'#10b981'},
+      {name:'日',color:'#14b8a6'},{name:'月',color:'#06b6d4'},{name:'水',color:'#0ea5e9'},
+      {name:'火',color:'#3b82f6'},{name:'风',color:'#6366f1'},{name:'山',color:'#8b5cf6'},
+      {name:'石',color:'#a855f7'},{name:'木',color:'#d946ef'},{name:'金',color:'#ec4899'},
+      {name:'土',color:'#f43f5e'},{name:'雨',color:'#e11d48'},{name:'雪',color:'#be123c'},
+      {name:'云',color:'#9f1239'},{name:'雷',color:'#881337'},{name:'春',color:'#f97316'},
+      {name:'夏',color:'#dc2626'},{name:'秋',color:'#ca8a04'},{name:'冬',color:'#0891b2'},
+      {name:'东',color:'#0284c7'},{name:'西',color:'#7c3aed'},{name:'南',color:'#c026d3'},
+      {name:'北',color:'#db2777'},{name:'左',color:'#ea580c'},{name:'右',color:'#c2410c'},
+      {name:'上',color:'#65a30d'},{name:'下',color:'#16a34a'},{name:'前',color:'#0d9488'},
+      {name:'后',color:'#0369a1'},{name:'高',color:'#7c3aed'},{name:'低',color:'#4f46e5'},
+      {name:'长',color:'#2563eb'},{name:'短',color:'#1d4ed8'}
+    ].map(c=>({...c,id:`chinese::${c.name}`,type:'text'}))},
+    {id:'english_words',name:'英语单词',subject:'english',icon:'fa-language',color:'#10b981',isCustom:false,cards:[
+      {name:'apple',hint:'苹果',color:'#ef4444'},{name:'banana',hint:'香蕉',color:'#fbbf24'},
+      {name:'orange',hint:'橙子',color:'#f97316'},{name:'grape',hint:'葡萄',color:'#8b5cf6'},
+      {name:'cherry',hint:'樱桃',color:'#ec4899'},{name:'lemon',hint:'柠檬',color:'#facc15'},
+      {name:'peach',hint:'桃子',color:'#f9a8d4'},{name:'water',hint:'水',color:'#0ea5e9'},
+      {name:'milk',hint:'牛奶',color:'#f5f5f4'},{name:'bread',hint:'面包',color:'#d97706'},
+      {name:'fish',hint:'鱼',color:'#06b6d4'},{name:'meat',hint:'肉',color:'#b91c1c'},
+      {name:'egg',hint:'鸡蛋',color:'#fef9c3'},{name:'tree',hint:'树',color:'#22c55e'},
+      {name:'flower',hint:'花',color:'#f472b6'},{name:'grass',hint:'草',color:'#4ade80'},
+      {name:'bird',hint:'鸟',color:'#60a5fa'},{name:'cat',hint:'猫',color:'#fb923c'},
+      {name:'dog',hint:'狗',color:'#a1887f'},{name:'sun',hint:'太阳',color:'#fbbf24'},
+      {name:'moon',hint:'月亮',color:'#e2e8f0'},{name:'star',hint:'星星',color:'#fb923c'},
+      {name:'sky',hint:'天空',color:'#0ea5e9'},{name:'book',hint:'书',color:'#8b5cf6'},
+      {name:'pen',hint:'笔',color:'#6366f1'},{name:'desk',hint:'桌子',color:'#a16207'},
+      {name:'chair',hint:'椅子',color:'#78716c'},{name:'home',hint:'家',color:'#f59e0b'},
+      {name:'school',hint:'学校',color:'#6366f1'},{name:'friend',hint:'朋友',color:'#ec4899'}
+    ].map(c=>({...c,id:`english::${c.name}`,type:'text',extra:{hint:c.hint}}))},
+    {id:'animals',name:'动物世界',subject:'science',icon:'fa-paw',color:'#f97316',isCustom:false,cards:[
+      {name:'小猫',icon:'fa-cat',color:'#fb923c'},{name:'小狗',icon:'fa-dog',color:'#a1887f'},
+      {name:'小鸟',icon:'fa-dove',color:'#60a5fa'},{name:'小鱼',icon:'fa-fish',color:'#06b6d4'},
+      {name:'兔子',icon:'fa-carrot',color:'#f9a8d4'},{name:'大象',icon:'fa-hippo',color:'#94a3b8'},
+      {name:'狮子',icon:'fa-paw',color:'#fbbf24'},{name:'老虎',icon:'fa-paw',color:'#f97316'},
+      {name:'熊猫',icon:'fa-paw',color:'#f5f5f4'},{name:'猴子',icon:'fa-paw',color:'#d97706'},
+      {name:'企鹅',icon:'fa-snowflake',color:'#1e293b'},{name:'蝴蝶',icon:'fa-feather',color:'#ec4899'},
+      {name:'蜜蜂',icon:'fa-bug',color:'#fbbf24'},{name:'青蛙',icon:'fa-frog',color:'#22c55e'},
+      {name:'蛇',icon:'fa-staff-snake',color:'#10b981'},{name:'蜗牛',icon:'fa-worm',color:'#a8a29e'},
+      {name:'马',icon:'fa-horse',color:'#92400e'},{name:'鹰',icon:'fa-feather-pointed',color:'#78716c'},
+      {name:'狼',icon:'fa-paw',color:'#64748b'},{name:'鹿',icon:'fa-paw',color:'#d97706'}
+    ].map(c=>({...c,id:`animal::${c.name}`,type:'icon'}))},
+    {id:'weather',name:'天气符号',subject:'geography',icon:'fa-cloud-sun',color:'#0ea5e9',isCustom:false,cards:[
+      {name:'晴天',icon:'fa-sun',color:'#fbbf24'},{name:'多云',icon:'fa-cloud',color:'#94a3b8'},
+      {name:'雨天',icon:'fa-cloud-rain',color:'#64748b'},{name:'雪天',icon:'fa-snowflake',color:'#e2e8f0'},
+      {name:'雷暴',icon:'fa-bolt',color:'#fbbf24'},{name:'大风',icon:'fa-wind',color:'#60a5fa'},
+      {name:'雾天',icon:'fa-smog',color:'#cbd5e1'},{name:'彩虹',icon:'fa-rainbow',color:'#ec4899'},
+      {name:'月亮',icon:'fa-moon',color:'#fef3c7'},{name:'星星',icon:'fa-star',color:'#fbbf24'}
+    ].map(c=>({...c,id:`weather::${c.name}`,type:'icon'}))},
+    {id:'transport',name:'交通工具',subject:'science',icon:'fa-car-side',color:'#6366f1',isCustom:false,cards:[
+      {name:'汽车',icon:'fa-car',color:'#ef4444'},{name:'公交车',icon:'fa-bus',color:'#fbbf24'},
+      {name:'火车',icon:'fa-train',color:'#6366f1'},{name:'飞机',icon:'fa-plane',color:'#60a5fa'},
+      {name:'轮船',icon:'fa-ship',color:'#0ea5e9'},{name:'自行车',icon:'fa-bicycle',color:'#22c55e'},
+      {name:'摩托车',icon:'fa-motorcycle',color:'#f97316'},{name:'出租车',icon:'fa-taxi',color:'#fbbf24'},
+      {name:'地铁',icon:'fa-subway',color:'#ef4444'},{name:'卡车',icon:'fa-truck',color:'#64748b'},
+      {name:'直升机',icon:'fa-helicopter',color:'#84cc16'},{name:'热气球',icon:'fa-parachute-box',color:'#ec4899'}
+    ].map(c=>({...c,id:`transport::${c.name}`,type:'icon'}))}
+  ];
+}
+
+// ========== 数据存储 ==========
+function loadData(){
+  try{const d=localStorage.getItem(STORAGE_KEY);if(d)return JSON.parse(d)}catch{}
+  return{version:'4.0',progress:[],customCategories:[],lastPlayedCategory:null,settings:{animationEnabled:true,memoryTimeMultiplier:1}};
+}
+function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+function getProgress(level){return loadData().progress.find(p=>p.level===level)||{level,stars:0,bestScore:0,completed:false}}
+function saveProgress(level,stars,score){
+  const d=loadData(),idx=d.progress.findIndex(p=>p.level===level);
+  const existing=getProgress(level);
+  const rec={level,stars:Math.max(existing.stars,stars),bestScore:Math.max(existing.bestScore,score),completed:true};
+  idx>=0?d.progress[idx]=rec:d.progress.push(rec);
+  saveData(d);
+}
+function getCustomCategories(){return loadData().customCategories}
+function saveCustomCategory(cat){
+  const d=loadData(),idx=d.customCategories.findIndex(c=>c.id===cat.id);
+  idx>=0?d.customCategories[idx]=cat:d.customCategories.push(cat);
+  saveData(d);
+}
+function removeCustomCategory(id){
+  const d=loadData();d.customCategories=d.customCategories.filter(c=>c.id!==id);saveData(d);
+}
+function saveSettings(s){const d=loadData();d.settings=s;saveData(d)}
+
+// ========== 颜色映射 ==========
+const COLOR_MAP={红:'#ef4444',橙:'#f97316',黄:'#fbbf24',绿:'#22c55e',青:'#06b6d4',蓝:'#3b82f6',紫:'#8b5cf6',粉:'#ec4899',白:'#f5f5f4',黑:'#1e293b',灰:'#94a3b8',棕:'#92400e'};
+function resolveColor(c){
+  const t=c.trim();
+  if(COLOR_MAP[t])return COLOR_MAP[t];
+  if(/^#[0-9a-fA-F]{6}$/.test(t))return t;
+  if(/^#[0-9a-fA-F]{3}$/.test(t))return '#'+t[1]+t[1]+t[2]+t[2]+t[3]+t[3];
+  return `hsl(${Math.random()*360},70%,60%)`;
+}
+
+// ========== 音效 ==========
+class SoundFX{
+  constructor(){this.ctx=null;this.ready=false}
+  init(){if(!this.ready)try{this.ctx=new(window.AudioContext||window.webkitAudioContext);this.ready=true}catch{}}
+  play(freq,dur,type='sine',vol=.3){
+    if(!this.ctx)return;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.connect(g);g.connect(this.ctx.destination);
+    o.frequency.value=freq;o.type=type;
+    g.gain.setValueAtTime(vol,this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.01,this.ctx.currentTime+dur);
+    o.start();o.stop(this.ctx.currentTime+dur);
+  }
+  click(){this.play(800,.1,'sine',.2)}
+  select(){this.play(600,.1,'sine',.25);setTimeout(()=>this.play(800,.1,'sine',.25),50)}
+  tick(){this.play(1e3,.05,'square',.15)}
+  correct(){this.play(523,.15,'sine',.3);setTimeout(()=>this.play(659,.15,'sine',.3),100);setTimeout(()=>this.play(784,.2,'sine',.3),200)}
+  wrong(){this.play(200,.3,'sawtooth',.2);setTimeout(()=>this.play(150,.3,'sawtooth',.2),150)}
+  complete(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.play(f,.3,'sine',.25),i*150))}
+}
+const sfx=new SoundFX;
+
+// ========== 粒子特效 ==========
+class Particles{
+  constructor(){this.items=[]}
+  create(x,y,color,n=8){
+    for(let i=0;i<n;i++){
+      const a=Math.PI*2*i/n+Math.random()*.5,spd=3+Math.random()*3;
+      this.items.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:1,color,size:4+Math.random()*4});
+    }
+  }
+  update(){this.items=this.items.filter(p=>(p.x+=p.vx,p.y+=p.vy,p.vy+=.1,p.life-=.02,p.life>0))}
+  render(ctx){
+    this.items.forEach(p=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
+      ctx.fillStyle=p.color;ctx.globalAlpha=p.life;ctx.fill();ctx.globalAlpha=1;
+    });
+  }
+}
+const particles=new Particles;
+
+// ========== 背景动画 ==========
+class BgAnimation{
+  constructor(){
+    this.canvas=document.getElementById('bgCanvas');
+    this.ctx=this.canvas?.getContext('2d');
+    this.pts=[];
+    if(this.ctx){this.resize();this.init();window.addEventListener('resize',()=>this.resize());this.animate()}
+  }
+  resize(){if(this.canvas){this.canvas.width=window.innerWidth;this.canvas.height=window.innerHeight}}
+  init(){
+    this.pts=[];
+    const n=Math.min(40,Math.floor(window.innerWidth*window.innerHeight/25e3));
+    for(let i=0;i<n;i++)this.pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,size:2+Math.random()*2,alpha:.2+Math.random()*.3});
+  }
+  animate(){
+    if(!this.ctx||!this.canvas)return;
+    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    this.pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>this.canvas.width)p.vx*=-1;
+      if(p.y<0||p.y>this.canvas.height)p.vy*=-1;
+      this.ctx.beginPath();this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      this.ctx.fillStyle=`rgba(251,191,36,${p.alpha})`;this.ctx.fill();
+    });
+    requestAnimationFrame(()=>this.animate());
+  }
+}
+
+// ========== 主游戏类 ==========
+class MemoryPalace{
+  constructor(){
+    this.timer=null;
+    this.app=document.getElementById('app');
+    const saved=loadData();
+    this.state={
+      view:'menu', // menu | settings | category | level | game | customize | help
+      category:null,
+      level:1,
+      targetCards:[],
+      displayCards:[],
+      selectedCards:new Set(),
+      phase:'ready', // ready | memory | test | reveal
+      timeLeft:0,
+      score:0,
+      stars:0,
+      settings:saved.settings||{animationEnabled:true,memoryTimeMultiplier:1}
+    };
+    new BgAnimation;
+    this.render();
+    document.addEventListener('keydown',e=>this.onKey(e));
+    this.app.addEventListener('click',()=>sfx.init());
+  }
+
+  // ===== 工具方法 =====
+  shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  cardsNeeded(level){return BASE_CARDS+level-1}
+  allCategories(){return[...getDefaultCategories(),...getCustomCategories()]}
+  findCategory(id){return this.allCategories().find(c=>c.id===id)}
+  subjectLabel(s){return{math:'数学',chinese:'语文',english:'英语',science:'综合',custom:'自定义',geography:'地理'}[s]||s}
+
+  selectRandomCards(cat,n){
+    return cat.cards.length<=n?this.shuffle(cat.cards):this.shuffle(cat.cards).slice(0,n);
+  }
+  generateDistractors(targets,cat,n){
+    const ids=new Set(targets.map(t=>t.id));
+    const pool=cat.cards.filter(c=>!ids.has(c.id));
+    return pool.length===0?[]:this.shuffle(pool).slice(0,Math.min(n,pool.length));
+  }
+
+  // ===== 游戏流程 =====
+  startLevel(cat,level){
+    this.state.category=cat;this.state.level=level;
+    this.state.selectedCards=new Set;this.state.phase='ready';this.state.view='game';
+    this.render();setTimeout(()=>this.startMemory(),500);
+  }
+  startMemory(){
+    const cat=this.state.category,n=this.cardsNeeded(this.state.level);
+    this.state.targetCards=this.selectRandomCards(cat,n);
+    this.state.displayCards=[...this.state.targetCards];
+    this.state.selectedCards=new Set;this.state.phase='memory';
+    this.state.timeLeft=Math.ceil((n+DISTRACTOR_RATIO)*this.state.settings.memoryTimeMultiplier);
+    this.render();
+    this.timer=setInterval(()=>{
+      sfx.tick();this.state.timeLeft--;this.render();
+      if(this.state.timeLeft<=0)this.finishMemory();
+    },1e3);
+  }
+  finishMemory(){
+    if(this.timer){clearInterval(this.timer);this.timer=null}
+    this.startTest();
+  }
+  startTest(){
+    const cat=this.state.category,n=this.cardsNeeded(this.state.level);
+    const distractors=this.generateDistractors(this.state.targetCards,cat,n);
+    this.state.displayCards=this.shuffle([...this.state.targetCards,...distractors]);
+    this.state.selectedCards=new Set;this.state.phase='test';this.render();
+  }
+  toggleCard(card){
+    if(this.state.phase!=='test')return;
+    sfx.select();
+    if(this.state.selectedCards.has(card.id))this.state.selectedCards.delete(card.id);
+    else{
+      this.state.selectedCards.add(card.id);
+      if(this.state.settings.animationEnabled){
+        const el=document.querySelector(`[data-card-id="${card.id}"]`);
+        if(el){const r=el.getBoundingClientRect();particles.create(r.left+r.width/2,r.top+r.height/2,card.color,8)}
+      }
+    }
+    this.render();
+  }
+  submitAnswer(){
+    if(this.state.phase!=='test')return;
+    sfx.click();this.state.phase='reveal';this.calcResults();this.render();
+  }
+  calcResults(){
+    const targetIds=new Set(this.state.targetCards.map(t=>t.id));
+    let correct=0,wrong=0;
+    this.state.selectedCards.forEach(id=>{targetIds.has(id)?correct++:wrong++});
+    const total=this.state.targetCards.length;
+    let score=0;
+    if(wrong===0&&correct===total)score=100;
+    else score=Math.floor(correct/total*100/10)*10;
+    this.state.score=score;
+    if(score>=90){this.state.stars=3;sfx.complete()}
+    else if(score>=70){this.state.stars=2;sfx.correct()}
+    else{this.state.stars=1;wrong>0?sfx.wrong():sfx.correct()}
+    saveProgress(this.state.level,this.state.stars,this.state.score);
+    // 同步积分到工具箱
+    if(window._tbStudent && this.state.score > 0){
+      if(window.parent && window.parent !== window)
+        window.parent.postMessage({source:'toolbox2',type:'addPoints',name:window._tbStudent,delta:this.state.score},'*');
+    }
+  }
+  nextLevel(){
+    if(this.state.level<TOTAL_LEVELS){this.state.level++;this.startLevel(this.state.category,this.state.level)}
+    else{this.state.view='menu';this.render()}
+  }
+  retryLevel(){this.startLevel(this.state.category,this.state.level)}
+
+  // ===== 键盘 =====
+  onKey(e){
+    if(e.key==='Escape'&&this.state.view!=='menu'){this.state.view='menu';this.render()}
+    if(e.key==='Enter'&&this.state.phase==='memory')this.finishMemory();
+  }
+
+  // ===== 分享成绩 =====
+  shareResult(){
+    const cat=this.state.category;
+    const s=this.state.stars;
+    const starStr='★'.repeat(s)+'☆'.repeat(3-s);
+    const html=`
+    <div class="share-overlay" onclick="game.closeShare()">
+      <div class="share-card" onclick="event.stopPropagation()">
+        <h3><i class="fas fa-trophy"></i> 挑战完成</h3>
+        <div style="font-size:3rem;margin:1rem 0;color:${cat.color}"><i class="fas ${cat.icon}"></i></div>
+        <div style="font-size:1.2rem;font-weight:700;margin-bottom:.5rem">${cat.name} · 第${this.state.level}关</div>
+        <div style="font-size:2rem;margin:.5rem 0;color:var(--accent)">${starStr}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--accent)">${this.state.score}分</div>
+        <div style="color:var(--text-secondary);margin:.5rem 0;font-size:.9rem">记忆宫殿 · 课堂记忆挑战</div>
+        <button class="btn btn-primary" style="margin-top:1rem" onclick="game.closeShare()"><i class="fas fa-check"></i> 确定</button>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend',html);
+  }
+  closeShare(){document.querySelector('.share-overlay')?.remove()}
+
+  // ===== 导航 =====
+  showMenu(){sfx.click();this.state.view='menu';this.render()}
+  showSettings(){sfx.click();this.state.view='settings';this.render()}
+  showCategorySelect(){sfx.click();this.state.view='category';this.render()}
+  showLevelSelect(catId){
+    sfx.click();
+    const cat=this.findCategory(catId);if(cat)this.state.category=cat;
+    this.state.view='level';this.render();
+  }
+  selectCategory(catId){
+    sfx.click();const cat=this.findCategory(catId);if(cat)this.state.category=cat;
+    this.showLevelSelect(catId);
+  }
+  showCustomize(){sfx.click();this.state.view='customize';this.render()}
+  showHelp(){sfx.click();this.state.view='help';this.render()}
+  toggleAnimation(){sfx.click();this.state.settings.animationEnabled=!this.state.settings.animationEnabled;saveSettings(this.state.settings);this.render()}
+  setMemoryTime(v){sfx.click();this.state.settings.memoryTimeMultiplier=v;saveSettings(this.state.settings);this.render()}
+
+  // ===== 创建卡组 =====
+  createCategory(){
+    sfx.click();
+    const nameEl=document.getElementById('customName');
+    const cardsEl=document.getElementById('customCards');
+    const name=nameEl?.value.trim(),cardsText=cardsEl?.value.trim();
+    if(!name||!cardsText){alert('请填写卡组名称和卡片列表！');return}
+    const items=cardsText.split('\n').map(s=>s.trim()).filter(s=>s);
+    if(items.length<4){alert('至少需要4张卡片！');return}
+    const cat={
+      id:`custom_${name}_${Date.now()}`,name,subject:'custom',icon:'fa-star',color:'#8b5cf6',isCustom:true,
+      cards:items.map((c,i)=>({id:`custom_${name}::${c}_${Date.now()}_${i}`,name:c,type:'text',color:`hsl(${i*137.5%360},70%,60%)`}))
+    };
+    saveCustomCategory(cat);
+    alert(`卡组「${name}」创建成功！共 ${items.length} 张卡片`);
+    this.render();
+  }
+  removeCategory(id){sfx.click();if(confirm('确定要删除这个卡组吗？')){removeCustomCategory(id);this.render()}}
+
+  // ===== Excel导入 =====
+  async importFile(file){
+    if(!file)return;
+    sfx.click();
+    try{
+      // 简易CSV解析（不依赖xlsx库）
+      const text=await file.text();
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length<2){alert('文件内容不足！');return}
+      const groups={};
+      // 跳过表头
+      for(let i=1;i<lines.length;i++){
+        const cols=lines[i].split(/[,\t]/).map(s=>s.trim().replace(/^"|"$/g,''));
+        const group=cols[0]||'未分类';
+        const name=cols[1]||'';
+        const color=cols[2]||'';
+        if(!name)continue;
+        if(!groups[group])groups[group]=[];
+        groups[group].push({id:`${group}::${name}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,name,type:'text',color:resolveColor(color)});
+      }
+      const cats=Object.entries(groups).map(([name,cards])=>({
+        id:`custom_${name}_${Date.now()}`,name,subject:'custom',icon:'fa-star',color:cards[0]?.color||'#8b5cf6',isCustom:true,cards
+      }));
+      cats.forEach(c=>saveCustomCategory(c));
+      alert(`成功导入 ${cats.length} 个卡组，共 ${cats.reduce((a,c)=>a+c.cards.length,0)} 张卡片！`);
+      this.render();
+    }catch(e){alert('文件解析失败：'+e.message)}
+  }
+
+  // ===== 下载模板 =====
+  downloadTemplate(){
+    sfx.click();
+    const csv='类别,卡片名称,颜色\n汉字,大,红\n汉字,小,橙\n汉字,中,黄\n汉字,人,绿\n英语,apple,绿\n英语,banana,黄\n水果,苹果,红\n水果,香蕉,黄\n';
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='记忆游戏导入模板.csv';a.click();
+  }
+
+  // ===== 渲染卡片 =====
+  getCardStatus(card){
+    if(this.state.phase!=='reveal')return null;
+    const targetIds=new Set(this.state.targetCards.map(t=>t.id));
+    const selected=this.state.selectedCards.has(card.id);
+    if(selected&&targetIds.has(card.id))return'correct';
+    if(selected&&!targetIds.has(card.id))return'wrong';
+    if(!selected&&targetIds.has(card.id))return'missed';
+    return'dimmed';
+  }
+  renderCard(card){
+    const status=this.getCardStatus(card);
+    const isSelected=this.state.selectedCards.has(card.id);
+    let cls='';
+    if(status==='correct')cls='correct';else if(status==='wrong')cls='wrong';
+    else if(status==='missed')cls='missed';else if(status==='dimmed')cls='dimmed';
+    if(isSelected&&this.state.phase==='test')cls+=' selected';
+
+    let content='';
+    if(card.type==='icon'&&card.icon)content=`<i class="fas ${card.icon}" style="color:${card.color};font-size:2.5rem;filter:drop-shadow(0 0 8px ${card.color})"></i>`;
+    else{
+      const fs=card.name.length>2?'1.5rem':'2rem';
+      content=`<div style="text-align:center"><span class="card-content" style="color:${card.color};font-size:${fs};font-weight:700;display:block">${card.name}</span>`;
+      if(card.extra?.hint)content+=`<span class="card-hint" style="color:#94a3b8;font-size:.85rem;display:block;margin-top:.25rem">${card.extra.hint}</span>`;
+      content+='</div>';
+    }
+    const onclick=this.state.phase==='test'?`onclick="game.toggleCard(game.state.displayCards.find(c=>c.id==='${card.id}'))"`:'';
+    const badge=status==='correct'?'<div class="card-badge correct-badge"><i class="fas fa-check"></i></div>':
+      status==='wrong'?'<div class="card-badge wrong-badge"><i class="fas fa-times"></i></div>':
+      status==='missed'?'<div class="card-badge missed-badge"><i class="fas fa-star"></i></div>':'';
+    const selBadge=isSelected&&this.state.phase==='test'&&!status?'<div class="card-badge select-badge"><i class="fas fa-check"></i></div>':'';
+    return`<div class="game-card ${cls}" data-card-id="${card.id}" ${onclick} style="background:${card.color}20;border-color:${card.color}">${content}${badge}${selBadge}</div>`;
+  }
+
+  // ===== 各视图渲染 =====
+  render(){
+    const v=this.state.view;
+    let html='';
+    switch(v){
+      case'menu':html=this.renderMenu();break;
+      case'settings':html=this.renderSettings();break;
+      case'category':html=this.renderCategorySelect();break;
+      case'level':html=this.renderLevelSelect();break;
+      case'game':html=this.renderGame();break;
+      case'customize':html=this.renderCustomize();break;
+      case'help':html=this.renderHelp();break;
+    }
+    if(!this.state.settings.animationEnabled)document.body.classList.add('no-animation');
+    else document.body.classList.remove('no-animation');
+    this.app.innerHTML=`<div class="app-container">${html}</div>`;
+
+    // 粒子画布
+    const pc=document.getElementById('particleCanvas');
+    if(pc){const ctx=pc.getContext('2d');if(ctx){pc.width=window.innerWidth;pc.height=window.innerHeight;
+      const loop=()=>{ctx.clearRect(0,0,pc.width,pc.height);particles.update();particles.render(ctx);requestAnimationFrame(loop)};loop()
+    }}
+  }
+
+  renderMenu(){
+    const cats=this.allCategories();
+    const data=loadData();
+    const completed=data.progress.filter(p=>p.completed).length;
+    const totalStars=data.progress.reduce((a,p)=>a+p.stars,0);
+    return`
+    <div class="fade-in">
+      <div style="text-align:center;padding-top:1.5rem;margin-bottom:1rem">
+        <h1 style="font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem">
+          <i class="fas fa-brain"></i> 记忆宫殿
+        </h1>
+        <p style="color:#94a3b8;font-size:1rem">课堂记忆挑战 · 唤醒你的大脑</p>
+      </div>
+
+      <!-- 步骤引导 -->
+      <div class="step-guide">
+        <span class="step active"><i class="fas fa-1"></i> 选学科</span>
+        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+        <span class="step"><i class="fas fa-2"></i> 开始挑战</span>
+      </div>
+
+      <!-- 学科快速选择 -->
+      <div class="quick-subjects">
+        ${cats.map(c=>`
+          <div class="quick-subject-btn" onclick="game.selectCategory('${c.id}')" style="border-color:${c.color}40">
+            <i class="fas ${c.icon}" style="color:${c.color};font-size:1.2rem"></i>
+            <span>${c.name}</span>
+            <span style="color:#64748b;font-size:.75rem">${c.cards.length}张</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- 主按钮 -->
+      <div style="text-align:center;margin:1.5rem 0">
+        <button class="btn btn-main" onclick="game.showCategorySelect()"><i class="fas fa-play"></i> 开始挑战</button>
+      </div>
+
+      <!-- 统计 + 次要按钮 -->
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem">
+        <div class="card" style="padding:.75rem 1.5rem;text-align:center;background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.1));border-color:#6366f1">
+          <div style="font-size:1.5rem;font-weight:800;color:#818cf8">${completed}</div>
+          <div style="color:#94a3b8;font-size:.75rem">已通关</div>
+        </div>
+        <div class="card" style="padding:.75rem 1.5rem;text-align:center;background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.1));border-color:#fbbf24">
+          <div style="font-size:1.5rem;font-weight:800;color:#fbbf24"><i class="fas fa-star"></i> ${totalStars}</div>
+          <div style="color:#94a3b8;font-size:.75rem">获得星星</div>
+        </div>
+      </div>
+
+      <!-- 次要功能 -->
+      <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem">
+        <button class="btn btn-ghost" onclick="game.showCustomize()" style="font-size:.9rem"><i class="fas fa-plus-circle"></i> 创建卡组</button>
+        <button class="btn btn-ghost" onclick="game.showSettings()" style="font-size:.9rem"><i class="fas fa-cog"></i> 设置</button>
+        <button class="btn btn-ghost" onclick="game.showHelp()" style="font-size:.9rem"><i class="fas fa-question-circle"></i> 说明</button>
+      </div>
+    </div>`;
+  }
+
+  renderSettings(){
+    const{animationEnabled,memoryTimeMultiplier}=this.state.settings;
+    return`
+    <div class="fade-in" style="max-width:28rem;margin:0 auto;padding-top:2rem">
+      <button class="btn btn-ghost" onclick="game.showMenu()"><i class="fas fa-arrow-left"></i> 返回</button>
+      <h2 style="font-size:1.5rem;font-weight:800;color:#e2e8f0;margin:1rem 0;text-align:center"><i class="fas fa-cog"></i> 难度设置</h2>
+      <div class="card" style="padding:1.5rem">
+        <div style="margin-bottom:1.5rem">
+          <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+            <span style="color:#e2e8f0;font-weight:600"><i class="fas fa-wand-magic-sparkles" style="color:#fbbf24"></i> 卡片动画</span>
+            <div class="toggle ${animationEnabled?'active':''}" onclick="game.toggleAnimation()"><div class="toggle-dot"></div></div>
+          </label>
+          <p style="color:#64748b;font-size:.8rem;margin-top:.5rem">关闭后卡片更稳定，适合课堂大屏</p>
+        </div>
+        <div>
+          <label style="display:block;color:#e2e8f0;font-weight:600;margin-bottom:.75rem"><i class="fas fa-clock" style="color:#06b6d4"></i> 记忆时间</label>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn ${memoryTimeMultiplier===.5?'btn-primary':'btn-ghost'}" style="flex:1" onclick="game.setMemoryTime(.5)"><i class="fas fa-bolt"></i> 快</button>
+            <button class="btn ${memoryTimeMultiplier===1?'btn-primary':'btn-ghost'}" style="flex:1" onclick="game.setMemoryTime(1)"><i class="fas fa-minus"></i> 正常</button>
+            <button class="btn ${memoryTimeMultiplier===1.5?'btn-primary':'btn-ghost'}" style="flex:1" onclick="game.setMemoryTime(1.5)"><i class="fas fa-hourglass-half"></i> 慢</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  renderCategorySelect(){
+    const cats=this.allCategories();
+    return`
+    <div class="fade-in" style="max-width:42rem;margin:0 auto;padding-top:2rem">
+      <button class="btn btn-ghost" onclick="game.showMenu()"><i class="fas fa-arrow-left"></i> 返回</button>
+      <h2 style="font-size:1.5rem;font-weight:800;color:#e2e8f0;margin:1rem 0;text-align:center"><i class="fas fa-folder-open"></i> 选择卡组</h2>
+      <div style="display:grid;gap:.75rem">
+        ${cats.map(c=>`
+          <div class="card" style="padding:1rem;display:flex;align-items:center;gap:1rem;cursor:pointer;border-color:${c.color}40" onclick="game.selectCategory('${c.id}')">
+            <div style="width:48px;height:48px;border-radius:.75rem;background:${c.color}30;display:flex;align-items:center;justify-content:center">
+              <i class="fas ${c.icon}" style="font-size:1.2rem;color:${c.color}"></i>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span style="font-weight:700;color:#e2e8f0">${c.name}</span>
+                <span class="subject-tag ${c.subject}">${this.subjectLabel(c.subject)}</span>
+              </div>
+              <div style="color:#94a3b8;font-size:.8rem;margin-top:.2rem">${c.cards.length} 张卡片</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:#64748b"></i>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  renderLevelSelect(){
+    const cat=this.state.category;if(!cat)return'';
+    const data=loadData();
+    const maxUnlocked=data.progress.length===0?1:Math.min(Math.max(...data.progress.filter(p=>p.completed).map(p=>p.level))+1,TOTAL_LEVELS);
+    const rows=[];
+    for(let i=0;i<TOTAL_LEVELS;i+=6)rows.push(Array.from({length:Math.min(6,TOTAL_LEVELS-i)},(_,j)=>i+j));
+
+    return`
+    <div class="fade-in" style="max-width:42rem;margin:0 auto;padding-top:2rem">
+      <button class="btn btn-ghost" onclick="game.showCategorySelect()"><i class="fas fa-arrow-left"></i> 返回</button>
+      <div class="card" style="padding:1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;border-color:${cat.color}">
+        <div style="width:48px;height:48px;border-radius:.75rem;background:${cat.color}30;display:flex;align-items:center;justify-content:center">
+          <i class="fas ${cat.icon}" style="font-size:1.2rem;color:${cat.color}"></i>
+        </div>
+        <div>
+          <h2 style="font-size:1.2rem;font-weight:700;color:#e2e8f0">${cat.name}</h2>
+          <p style="color:#94a3b8;font-size:.85rem">第1关: ${BASE_CARDS}张 · 每关+1 · 第${TOTAL_LEVELS}关: ${BASE_CARDS+TOTAL_LEVELS-1}张</p>
+        </div>
+      </div>
+      <div class="card" style="padding:1.5rem">
+        <div style="display:grid;gap:1.5rem">
+          ${rows.map((row,ri)=>`
+            <div style="display:flex;justify-content:center;gap:1.5rem;${ri%2===1?'flex-direction:row-reverse;':''}">
+              ${row.map(lv=>{
+                const prog=getProgress(lv+1);
+                const unlocked=lv+1<=maxUnlocked;
+                let cls='locked';if(prog.completed)cls='completed';else if(unlocked)cls='unlocked current';
+                return`<div class="level-node ${cls}" onclick="${unlocked?`game.startLevel(game.findCategory('${cat.id}'),${lv+1})`:''}" style="${unlocked?'':'opacity:.5;cursor:not-allowed;'}">
+                  <span>${lv+1}</span>
+                  ${prog.completed?`<div style="position:absolute;top:-8px;right:-8px;font-size:.7rem">${[0,1,2].map(s=>`<i class="fas fa-star ${s<prog.stars?'text-yellow-400':'text-gray-600'}"></i>`).join('')}</div>`:''}
+                </div>`;
+              }).join('')}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  renderGame(){
+    const cat=this.state.category,n=this.cardsNeeded(this.state.level);
+    let phaseHtml='';
+    if(this.state.phase==='memory'){
+      phaseHtml=`
+        <div style="text-align:center;margin-bottom:1rem">
+          <h2 class="phase-title" style="font-size:1.5rem;font-weight:700;color:#fbbf24;margin-bottom:.25rem"><i class="fas fa-eye"></i> 记忆阶段</h2>
+          <p style="color:#94a3b8;font-size:.9rem">仔细记住这 ${n} 张卡片！</p>
+        </div>
+        <div class="countdown ${this.state.timeLeft<=3?'warning':''}">${this.state.timeLeft}</div>
+        <button class="btn btn-primary" style="margin-top:1rem" onclick="game.finishMemory()"><i class="fas fa-check"></i> 我记住了！</button>`;
+    }else if(this.state.phase==='test'){
+      phaseHtml=`
+        <div style="text-align:center;margin-bottom:1rem">
+          <h2 class="phase-title" style="font-size:1.5rem;font-weight:700;color:#6366f1;margin-bottom:.25rem"><i class="fas fa-hand-pointer"></i> 测试阶段</h2>
+          <p style="color:#94a3b8;font-size:.9rem">找出刚才见过的 ${n} 张卡片！</p>
+          <div style="margin-top:.25rem"><span style="color:#fbbf24;font-weight:700">已选: ${this.state.selectedCards.size}</span><span style="color:#94a3b8"> / ${n}</span></div>
+        </div>
+        <button class="btn btn-success" style="margin-top:1rem" onclick="game.submitAnswer()" ${this.state.selectedCards.size!==n?'disabled':''}><i class="fas fa-paper-plane"></i> 提交答案</button>`;
+    }else if(this.state.phase==='reveal'){
+      phaseHtml=`
+        <div style="text-align:center;margin-bottom:1rem">
+          <h2 class="phase-title" style="font-size:1.5rem;font-weight:700;color:#10b981;margin-bottom:.25rem"><i class="fas fa-clipboard-check"></i> 结果揭晓</h2>
+          <div class="stars" style="font-size:1.5rem;margin:.5rem 0">${[1,2,3].map(i=>`<i class="fas fa-star ${i<=this.state.stars?'':'empty'}"></i>`).join('')}</div>
+          <p style="color:#fbbf24;font-size:1.25rem;font-weight:700">得分: ${this.state.score}</p>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1rem;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="game.retryLevel()"><i class="fas fa-redo"></i> 重玩</button>
+          <button class="btn btn-success" onclick="game.nextLevel()"><i class="fas fa-forward"></i> ${this.state.level<TOTAL_LEVELS?'下一关':'完成'}</button>
+          <button class="btn btn-warning" onclick="game.shareResult()"><i class="fas fa-share-alt"></i> 分享</button>
+        </div>`;
+    }
+
+    const cols=this.state.displayCards.length<=4?2:this.state.displayCards.length<=6?3:this.state.displayCards.length<=9?4:5;
+    return`
+    <div>
+      <div class="card" style="padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
+        <button class="btn btn-ghost" onclick="game.showLevelSelect('${cat.id}')" style="padding:.5rem"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align:center">
+          <div style="color:#e2e8f0;font-weight:700">${cat.name}</div>
+          <div style="color:#94a3b8;font-size:.8rem">第 ${this.state.level} 关 · ${n}张卡片</div>
+        </div>
+        <div style="width:60px"></div>
+      </div>
+      ${phaseHtml}
+      <div class="game-grid" style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:.75rem;max-width:500px;margin:1.5rem auto">
+        ${this.state.displayCards.map(c=>this.renderCard(c)).join('')}
+      </div>
+      <div style="text-align:center;margin-top:1rem;color:#64748b;font-size:.7rem;padding-bottom:1rem">
+        图例: <span style="color:#10b981"><i class="fas fa-check-circle"></i> 选对</span> · <span style="color:#ef4444"><i class="fas fa-times-circle"></i> 选错</span> · <span style="color:#f59e0b"><i class="fas fa-star"></i> 遗漏</span>
+      </div>
+    </div>`;
+  }
+
+  renderCustomize(){
+    const customs=getCustomCategories();
+    return`
+    <div class="fade-in" style="max-width:36rem;margin:0 auto;padding-top:2rem">
+      <button class="btn btn-ghost" onclick="game.showMenu()"><i class="fas fa-arrow-left"></i> 返回</button>
+      <h2 style="font-size:1.5rem;font-weight:800;color:#e2e8f0;margin:1rem 0;text-align:center"><i class="fas fa-plus-circle"></i> 创建卡组</h2>
+
+      <div class="method-card">
+        <h3 style="color:#e2e8f0;font-weight:700;margin-bottom:.75rem"><i class="fas fa-file-import" style="color:#10b981"></i> 方法一：导入文件</h3>
+        <p style="color:#94a3b8;font-size:.8rem;margin-bottom:.5rem;line-height:1.5">
+          <strong>步骤：</strong>下载模板 → 用Excel/WPS填写 → 上传文件
+        </p>
+        <p style="color:#64748b;font-size:.75rem;margin-bottom:.75rem">
+          第一列=类别（同类填相同名称）· 第二列=卡片名称 · 第三列=颜色（可选）
+        </p>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <label class="btn btn-success" style="cursor:pointer">
+            <i class="fas fa-upload"></i> 选择文件
+            <input type="file" accept=".csv,.txt" style="display:none" onchange="game.importFile(this.files?.[0])">
+          </label>
+          <button class="btn btn-primary" onclick="game.downloadTemplate()"><i class="fas fa-download"></i> 下载模板</button>
+        </div>
+      </div>
+
+      <div class="method-card">
+        <h3 style="color:#e2e8f0;font-weight:700;margin-bottom:.75rem"><i class="fas fa-keyboard" style="color:#3b82f6"></i> 方法二：手动输入</h3>
+        <div style="display:grid;gap:.75rem">
+          <div>
+            <label style="display:block;color:#94a3b8;font-size:.8rem;margin-bottom:.3rem">卡组名称（如：我的单词卡）</label>
+            <input type="text" id="customName" style="width:100%;padding:.5rem .75rem;border-radius:.5rem;background:#0f172a;border:1px solid #475569;color:#fff;font-size:1rem" placeholder="输入卡组名称">
+          </div>
+          <div>
+            <label style="display:block;color:#94a3b8;font-size:.8rem;margin-bottom:.3rem">卡片列表（每行一张）</label>
+            <textarea id="customCards" rows="6" style="width:100%;padding:.5rem .75rem;border-radius:.5rem;background:#0f172a;border:1px solid #475569;color:#fff;font-size:.9rem;font-family:monospace;resize:vertical" placeholder="圆形&#10;正方形&#10;三角形&#10;apple"></textarea>
+          </div>
+          <button class="btn btn-success" style="width:100%" onclick="game.createCategory()"><i class="fas fa-plus"></i> 创建卡组</button>
+        </div>
+      </div>
+
+      ${customs.length>0?`
+        <div class="method-card" style="margin-top:1rem">
+          <h3 style="color:#e2e8f0;font-weight:700;margin-bottom:.75rem"><i class="fas fa-list" style="color:#8b5cf6"></i> 已创建的卡组</h3>
+          <div style="display:grid;gap:.5rem">
+            ${customs.map(c=>`
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;border-radius:.5rem;background:#0f172a80">
+                <div style="display:flex;align-items:center;gap:.75rem">
+                  <i class="fas ${c.icon}" style="color:${c.color}"></i>
+                  <span style="color:#e2e8f0">${c.name}</span>
+                  <span style="color:#64748b;font-size:.75rem">${c.cards.length}张</span>
+                </div>
+                <button class="btn btn-danger" style="padding:.3rem .5rem;font-size:.8rem" onclick="game.removeCategory('${c.id}')"><i class="fas fa-trash"></i></button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `:''}
+    </div>`;
+  }
+
+  renderHelp(){
+    return`
+    <div class="fade-in" style="max-width:36rem;margin:0 auto;padding-top:2rem">
+      <button class="btn btn-ghost" onclick="game.showMenu()"><i class="fas fa-arrow-left"></i> 返回</button>
+      <h2 style="font-size:1.5rem;font-weight:800;color:#e2e8f0;margin:1rem 0;text-align:center"><i class="fas fa-question-circle"></i> 游戏说明</h2>
+      <div class="card" style="padding:1.5rem;display:grid;gap:1.25rem">
+        <div>
+          <h3 style="color:#fbbf24;font-weight:700;margin-bottom:.3rem"><i class="fas fa-eye"></i> 记忆阶段</h3>
+          <p style="color:#94a3b8;font-size:.875rem;line-height:1.6">展示若干张卡片，仔细记忆。倒计时最后3秒变红提示。可点击「我记住了」提前进入下一阶段。</p>
+        </div>
+        <div>
+          <h3 style="color:#6366f1;font-weight:700;margin-bottom:.3rem"><i class="fas fa-hand-pointer"></i> 测试阶段</h3>
+          <p style="color:#94a3b8;font-size:.875rem;line-height:1.6">目标卡片混入干扰卡片，点击选出刚才见过的。选够数量后提交答案。</p>
+        </div>
+        <div>
+          <h3 style="color:#10b981;font-weight:700;margin-bottom:.3rem"><i class="fas fa-star"></i> 评分规则</h3>
+          <div style="color:#94a3b8;font-size:.875rem;line-height:1.6">
+            <p>全对100分，按正确率比例得分（取整到十位）</p>
+            <p style="margin-top:.3rem">三星 ≥90分 · 二星 ≥70分 · 一星 &lt;70分</p>
+          </div>
+        </div>
+        <div>
+          <h3 style="color:#f472b6;font-weight:700;margin-bottom:.3rem"><i class="fas fa-keyboard"></i> 快捷键</h3>
+          <p style="color:#94a3b8;font-size:.875rem;line-height:1.6">Enter = 确认/跳过记忆 · Escape = 返回</p>
+        </div>
+        <div>
+          <h3 style="color:#fbbf24;font-weight:700;margin-bottom:.3rem"><i class="fas fa-chalkboard-teacher"></i> 课堂使用建议</h3>
+          <p style="color:#94a3b8;font-size:.875rem;line-height:1.6">投屏到大屏后，让学生集体参与记忆挑战。可以小组PK，看哪个组记住的卡片最多！创建自定义卡组可适配各学科内容。</p>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
+const game=new MemoryPalace;
+window.game=game;
+
+// ===== 工具箱积分同步 =====
+window._tbStudent = null;
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.source !== 'toolbox2') return;
+  if (e.data.type === 'init' && e.data.data) {
+    window._tbStudent = e.data.data.selectedStudent || null;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剧情闯关课堂</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh;overflow-x:hidden}
+.container{max-width:720px;margin:0 auto;padding:16px}
+
+/* ===== 动画 ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{transform:scale(.9);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes slowReveal{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes countPulse{0%{transform:scale(1.6);opacity:1}80%{transform:scale(.9);opacity:.7}100%{transform:scale(0);opacity:0}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes starBurst{0%{transform:scale(0);opacity:0}50%{transform:scale(1.3);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(108,92,231,.2)}50%{box-shadow:0 0 40px rgba(108,92,231,.4)}}
+
+.panel{display:none;animation:fadeUp .35s ease}
+.panel.active{display:block}
+
+/* ===== 顶部 ===== */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:8px 0}
+.logo{font-size:1.15em;font-weight:900;letter-spacing:-0.5px}
+.logo-icon{display:inline-block;width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;text-align:center;line-height:28px;font-size:.9em;margin-right:6px;vertical-align:middle}
+.top-links a{color:#94a3b8;font-size:.78em;text-decoration:none;cursor:pointer;font-weight:500;margin-left:10px}
+
+/* ===== Hero ===== */
+.hero{text-align:center;padding:36px 20px 24px}
+.hero-badge{display:inline-block;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;font-size:.68em;padding:5px 16px;border-radius:20px;margin-bottom:14px;letter-spacing:1px;font-weight:600}
+.hero h1{font-size:1.55em;line-height:1.35;margin-bottom:10px;color:#1a202c;font-weight:900}
+.hero p{color:#718096;font-size:.88em;line-height:1.65;max-width:420px;margin:0 auto}
+
+/* ===== 入口卡片 ===== */
+.entry-grid{display:grid;gap:12px;margin-bottom:20px}
+.entry-card{background:#fff;border:2px solid #e2e8f0;border-radius:18px;padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.entry-card:hover{border-color:#a29bfe;transform:translateY(-3px);box-shadow:0 8px 30px rgba(108,92,231,.12)}
+.entry-card .ec-icon{font-size:2em;margin-bottom:8px;display:block}
+.entry-card .ec-title{font-size:.95em;font-weight:700;margin-bottom:4px;color:#2d3748}
+.entry-card .ec-desc{font-size:.78em;color:#a0aec0;line-height:1.55}
+.entry-card .ec-arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:#cbd5e0;font-size:1.3em;transition:color .2s}
+.entry-card:hover .ec-arrow{color:#6c5ce7}
+.entry-card:nth-child(1){border-left:4px solid #6c5ce7}
+.entry-card:nth-child(2){border-left:4px solid #00b894}
+.entry-card:nth-child(3){border-left:4px solid #fdcb6e}
+
+/* ===== 主题选择 ===== */
+.section-title{font-size:.72em;color:#a0aec0;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:600}
+.theme-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;margin-bottom:20px}
+.theme-scroll::-webkit-scrollbar{height:4px}
+.theme-scroll::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:4px}
+.t-card{min-width:140px;background:#fff;border:2px solid #e2e8f0;border-radius:16px;padding:16px 12px;cursor:pointer;transition:all .25s;text-align:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+.t-card:hover{border-color:#a29bfe;transform:translateY(-3px);box-shadow:0 6px 20px rgba(108,92,231,.1)}
+.t-card .t-emoji{font-size:2.4em;display:block;margin-bottom:6px}
+.t-card .t-name{font-size:.85em;font-weight:700;margin-bottom:4px;color:#2d3748}
+.t-card .t-tag{display:inline-block;background:#f0f4ff;color:#6c5ce7;font-size:.6em;padding:2px 10px;border-radius:10px;font-weight:600}
+
+/* ===== 主题主页 ===== */
+.theme-home{text-align:center;padding:20px 0}
+.theme-hero{border-radius:24px;overflow:hidden;margin-bottom:20px;position:relative;min-height:280px;display:flex;align-items:center;justify-content:center}
+.theme-hero-bg{position:absolute;inset:0;z-index:0}
+.theme-hero-content{position:relative;z-index:1;text-align:center;padding:30px 20px}
+.theme-hero-content .th-emoji{font-size:4em;display:block;margin-bottom:12px}
+.theme-hero-content .th-title{font-size:1.6em;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:8px}
+.theme-hero-content .th-desc{font-size:.95em;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.2);line-height:1.6;max-width:360px;margin:0 auto}
+.theme-start-btn{display:inline-block;margin-top:20px;padding:16px 48px;background:rgba(255,255,255,.95);color:var(--theme-dark,#6c5ce7);border-radius:16px;font-size:1.05em;font-weight:800;cursor:pointer;border:none;transition:all .25s;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.theme-start-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+
+/* ===== 入场动画覆盖层 ===== */
+.intro-overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);animation:fadeUp .5s ease}
+.intro-scene{width:280px;height:280px;border-radius:24px;overflow:hidden;margin-bottom:24px;display:flex;align-items:center;justify-content:center;position:relative}
+.intro-text{color:#fff;font-size:1.15em;line-height:1.8;text-align:center;max-width:400px;padding:0 20px;opacity:0}
+.intro-text.reveal{animation:slowReveal 1.2s ease forwards}
+.intro-countdown{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:6em;font-weight:900;color:#fff;z-index:101;pointer-events:none}
+.intro-countdown.pop{animation:countPulse .9s ease forwards}
+
+/* ===== 闯关界面 ===== */
+.quest-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.back-btn{background:#fff;border:2px solid #e2e8f0;color:#4a5568;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:.85em;font-weight:600;transition:all .2s}
+.back-btn:hover{border-color:#cbd5e0;background:#f7fafc}
+.quest-info{flex:1;text-align:right;font-size:.78em;color:#a0aec0;font-weight:600}
+.quest-info strong{color:#4a5568}
+
+.progress-bar{height:8px;background:#e2e8f0;border-radius:8px;margin-bottom:18px;overflow:hidden}
+.progress-fill{height:100%;border-radius:8px;transition:width .5s ease}
+
+/* 场景卡片 */
+.scene-card{border-radius:20px;padding:0;margin-bottom:16px;position:relative;overflow:hidden;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.scene-illust{width:100%;min-height:200px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.scene-illust .si-bg{position:absolute;inset:0;z-index:0}
+.scene-illust .si-elements{position:relative;z-index:1;font-size:5em;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15))}
+.scene-illust .si-caption{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.45);color:#fff;padding:4px 16px;border-radius:10px;font-size:.75em;font-weight:600;z-index:2;backdrop-filter:blur(4px)}
+.scene-card .sc-body{padding:20px}
+.scene-card .sc-chapter{font-size:.72em;opacity:.5;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;font-weight:700}
+.scene-card .sc-title{font-size:1.2em;font-weight:800;margin-bottom:4px;color:var(--theme-dark,#6c5ce7)}
+
+.story-box{background:#f7fafc;border-left:5px solid var(--theme-color,#6c5ce7);border-radius:0 16px 16px 0;padding:18px 20px;margin-bottom:18px;font-size:1.02em;line-height:1.9;color:#4a5568}
+.question-text{font-size:1.08em;font-weight:700;margin-bottom:18px;line-height:1.7;color:#2d3748}
+
+/* 倒计时 */
+.countdown-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 14px;background:#fff5f0;border-radius:12px;font-size:.82em;font-weight:700;color:#e17055}
+.countdown-bar .cd-num{font-size:1.3em;font-weight:900}
+.countdown-bar .cd-track{flex:1;height:6px;background:#fed7c3;border-radius:6px;overflow:hidden}
+.countdown-bar .cd-fill{height:100%;background:linear-gradient(90deg,#fdcb6e,#e17055);border-radius:6px;transition:width .1s linear}
+
+/* 选项 */
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice-btn{background:#fff;border:2.5px solid #e2e8f0;border-radius:16px;padding:15px 18px;color:#4a5568;font-size:.95em;cursor:pointer;text-align:left;transition:all .2s;display:flex;align-items:flex-start;gap:12px;line-height:1.55;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.choice-btn:hover:not(.selected):not(.disabled){border-color:#a29bfe;background:#faf5ff;transform:translateX(4px)}
+.choice-btn .ch-label{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:.78em;font-weight:800;margin-top:1px;color:#6c5ce7;transition:all .2s}
+.choice-btn:hover:not(.selected):not(.disabled) .ch-label{background:#6c5ce7;color:#fff}
+.choice-btn.correct{border-color:#00b894!important;background:#e6fffa!important;animation:bounceIn .4s ease}
+.choice-btn.correct .ch-label{background:#00b894!important;color:#fff!important}
+.choice-btn.wrong{border-color:#e17055!important;background:#fff5f0!important;animation:shakeX .5s ease}
+.choice-btn.wrong .ch-label{background:#e17055!important;color:#fff!important}
+.choice-btn.disabled{pointer-events:none;opacity:.45}
+
+/* 解析 */
+.explain-box{background:#e6fffa;border:2px solid #b2f5ea;border-radius:14px;padding:16px;margin-top:14px;font-size:.92em;line-height:1.75;color:#2d6a4f;animation:fadeUp .3s ease}
+.explain-box .exp-label{font-size:.75em;color:#00b894;font-weight:700;margin-bottom:4px;letter-spacing:1px}
+.explain-box.wrong-exp{background:#fff5f0;border-color:#fed7c3;color:#9c4221}
+.explain-box.wrong-exp .exp-label{color:#e17055}
+
+.next-btn{width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;border-radius:14px;color:#fff;font-size:.95em;font-weight:700;cursor:pointer;transition:all .25s;display:none}
+.next-btn.show{display:block;animation:bounceIn .35s ease}
+.next-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(108,92,231,.35)}
+
+/* ===== 结果/庆祝页 ===== */
+.celebrate-page{text-align:center;padding:30px 20px;position:relative;overflow:hidden;min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.celebrate-page .confetti{position:absolute;top:-10px;width:10px;height:10px;border-radius:2px;animation:confettiFall linear forwards;z-index:0}
+.celebrate-content{position:relative;z-index:1}
+.celebrate-stars{font-size:3em;margin-bottom:12px;animation:starBurst .6s ease forwards}
+.celebrate-score{font-size:4em;font-weight:900;background:linear-gradient(135deg,#6c5ce7,#00b894,#fdcb6e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.celebrate-label{font-size:.85em;color:#a0aec0;margin-bottom:8px;font-weight:600}
+.celebrate-msg{font-size:1.05em;color:#4a5568;line-height:1.7;margin-bottom:28px;font-weight:500;max-width:340px;margin-left:auto;margin-right:auto}
+.celebrate-badge{display:inline-block;padding:8px 24px;border-radius:20px;font-size:.85em;font-weight:700;margin-bottom:24px}
+
+/* ===== 自定义创建 ===== */
+.creator-card{background:#fff;border:2px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.03)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.72em;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#f7fafc;border:2px solid #e2e8f0;border-radius:12px;padding:11px 14px;color:#2d3748;font-size:.88em;font-family:inherit;transition:border-color .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:#6c5ce7;background:#fff}
+.form-group textarea{resize:vertical;min-height:70px;line-height:1.5}
+.form-group input::placeholder,.form-group textarea::placeholder{color:#cbd5e0}
+.form-group select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0aec0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+.chapter-editor{background:#f7fafc;border:2px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:14px}
+.chapter-editor .ch-num{font-size:.68em;color:#6c5ce7;font-weight:700;margin-bottom:10px;letter-spacing:1px}
+.chapter-editor .form-group{margin-bottom:10px}
+.choice-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.choice-row input{flex:1}
+.choice-row .correct-mark{width:26px;height:26px;border-radius:50%;border:2px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75em;flex-shrink:0;transition:all .15s;background:#fff}
+.choice-row .correct-mark.is-correct{border-color:#00b894;background:#e6fffa;color:#00b894}
+.choice-row .correct-mark:hover{border-color:#00b894}
+
+.upload-area{border:2px dashed #e2e8f0;border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;position:relative;overflow:hidden}
+.upload-area:hover{border-color:#a29bfe;background:#faf5ff}
+.upload-area input[type="file"]{position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;cursor:pointer}
+.upload-area .upload-hint{font-size:.78em;color:#a0aec0;line-height:1.5}
+.upload-area .upload-hint .upload-icon{font-size:1.6em;display:block;margin-bottom:4px}
+.upload-preview{position:relative;border-radius:12px;overflow:hidden;margin-top:8px}
+.upload-preview img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block}
+.upload-preview video{width:100%;max-height:200px;border-radius:10px;display:block}
+.upload-preview .remove-media{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;border:none;cursor:pointer;font-size:.7em;display:flex;align-items:center;justify-content:center}
+.media-type-tabs{display:flex;gap:6px;margin-bottom:8px}
+.media-type-tab{padding:4px 12px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#718096;font-size:.72em;cursor:pointer;font-weight:600;transition:all .15s}
+.media-type-tab.active{border-color:#6c5ce7;background:#f0f4ff;color:#6c5ce7}
+
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-primary{flex:1;padding:14px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;border-radius:14px;color:#fff;font-size:.9em;font-weight:700;cursor:pointer;transition:all .25s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(108,92,231,.35)}
+.btn-secondary{padding:14px 20px;background:#fff;border:2px solid #e2e8f0;border-radius:14px;color:#718096;font-size:.85em;cursor:pointer;transition:all .2s;font-weight:600}
+.btn-secondary:hover{border-color:#cbd5e0;color:#4a5568}
+.btn-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;background:#fff;border:2px dashed #e2e8f0;border-radius:12px;color:#a0aec0;font-size:.82em;cursor:pointer;transition:all .15s;margin-bottom:16px;font-weight:600}
+.btn-add:hover{border-color:#a29bfe;color:#6c5ce7}
+
+/* ===== 主题配色 ===== */
+:root{--theme-color:#6c5ce7;--theme-light:#f0f4ff;--theme-lighter:#f7fafc;--theme-dark:#6c5ce7;--theme-gradient:linear-gradient(135deg,#6c5ce7,#a29bfe)}
+[data-theme="chinese"]{--theme-color:#e17055;--theme-light:#fff5f0;--theme-lighter:#fffaf7;--theme-dark:#c0392b;--theme-gradient:linear-gradient(135deg,#e17055,#fab1a0)}
+[data-theme="math"]{--theme-color:#0984e3;--theme-light:#f0f7ff;--theme-lighter:#f7fbff;--theme-dark:#0652DD;--theme-gradient:linear-gradient(135deg,#0984e3,#74b9ff)}
+[data-theme="english"]{--theme-color:#6c5ce7;--theme-light:#f0f4ff;--theme-lighter:#f7f9ff;--theme-dark:#5f27cd;--theme-gradient:linear-gradient(135deg,#6c5ce7,#a29bfe)}
+[data-theme="physics"]{--theme-color:#00b894;--theme-light:#e6fffa;--theme-lighter:#f0fff8;--theme-dark:#00876a;--theme-gradient:linear-gradient(135deg,#00b894,#55efc4)}
+[data-theme="chemistry"]{--theme-color:#00cec9;--theme-light:#e0fffe;--theme-lighter:#f0fffe;--theme-dark:#0a7e7c;--theme-gradient:linear-gradient(135deg,#00cec9,#81ecec)}
+[data-theme="history"]{--theme-color:#e17055;--theme-light:#fff5f0;--theme-lighter:#fffaf7;--theme-dark:#b55a3f;--theme-gradient:linear-gradient(135deg,#e17055,#fab1a0)}
+[data-theme="geo"]{--theme-color:#00b894;--theme-light:#e6fffa;--theme-lighter:#f0fff8;--theme-dark:#00876a;--theme-gradient:linear-gradient(135deg,#00b894,#55efc4)}
+[data-theme="politics"]{--theme-color:#d63031;--theme-light:#fff0f0;--theme-lighter:#fff7f7;--theme-dark:#b71c1c;--theme-gradient:linear-gradient(135deg,#d63031,#ff7675)}
+[data-theme="biology"]{--theme-color:#55a630;--theme-light:#f0ffe6;--theme-lighter:#f7fff0;--theme-dark:#3d7c20;--theme-gradient:linear-gradient(135deg,#55a630,#a3d977)}
+[data-theme="music"]{--theme-color:#a29bfe;--theme-light:#f3f0ff;--theme-lighter:#f9f7ff;--theme-dark:#7c6fe0;--theme-gradient:linear-gradient(135deg,#a29bfe,#dfe6e9)}
+[data-theme="pe"]{--theme-color:#fdcb6e;--theme-light:#fff9e6;--theme-lighter:#fffdf0;--theme-dark:#d4a017;--theme-gradient:linear-gradient(135deg,#fdcb6e,#ffeaa7)}
+[data-theme="art"]{--theme-color:#fd79a8;--theme-light:#fff0f6;--theme-lighter:#fff7fa;--theme-dark:#d63384;--theme-gradient:linear-gradient(135deg,#fd79a8,#fab1a0)}
+[data-theme="morality"]{--theme-color:#74b9ff;--theme-light:#eef6ff;--theme-lighter:#f5faff;--theme-dark:#3d8bd4;--theme-gradient:linear-gradient(135deg,#74b9ff,#a29bfe)}
+[data-theme="tech"]{--theme-color:#636e72;--theme-light:#f0f2f4;--theme-lighter:#f7f8f9;--theme-dark:#2d3436;--theme-gradient:linear-gradient(135deg,#636e72,#b2bec3)}
+[data-theme="custom"]{--theme-color:#6c5ce7;--theme-light:#f0f4ff;--theme-lighter:#f7f9ff;--theme-dark:#5f27cd;--theme-gradient:linear-gradient(135deg,#6c5ce7,#a29bfe)}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#e17055;color:#fff;padding:12px 28px;border-radius:12px;font-size:.85em;z-index:999;animation:fadeUp .3s ease;display:none;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.toast.show{display:block}
+.toast.success{background:#00b894}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-bar">
+    <div class="logo"><span class="logo-icon">Q</span>剧情闯关课堂</div>
+    <div class="top-links"><a onclick="showPanel('panel-home')">首页</a></div>
+  </div>
+
+  <!-- ===== 首页 ===== -->
+  <div class="panel active" id="panel-home">
+    <div class="hero">
+      <div class="hero-badge">老师也能做</div>
+      <h1>3步创建你的<br>课堂剧情闯关</h1>
+      <p>编故事、出选择、配图片——学生直接在手机或大屏上玩，无需安装任何App</p>
+    </div>
+    <div class="entry-grid">
+      <div class="entry-card" onclick="showPanel('panel-create')">
+        <span class="ec-icon">✏️</span>
+        <div class="ec-title">自己做一个 <span style="font-size:.58em;background:#e6fffa;color:#00b894;padding:2px 8px;border-radius:8px;margin-left:6px;font-weight:700">推荐·零门槛</span></div>
+        <div class="ec-desc">填表创建专属闯关，还能上传配图和视频，2分钟搞定</div>
+        <span class="ec-arrow">→</span>
+      </div>
+      <div class="entry-card" onclick="showPanel('panel-themes')">
+        <span class="ec-icon">🎮</span>
+        <div class="ec-title">直接开玩</div>
+        <div class="ec-desc">12个学科主题已备好，每关都有剧情配图，选一个开始</div>
+        <span class="ec-arrow">→</span>
+      </div>
+      <div class="entry-card" onclick="showPanel('panel-ai')">
+        <span class="ec-icon">🤖</span>
+        <div class="ec-title">AI帮你想</div>
+        <div class="ec-desc">告诉AI学科和知识点，自动生成剧情和题目（有免费API；无密钥也能用本地模板）</div>
+        <span class="ec-arrow">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 主题选择 ===== -->
+  <div class="panel" id="panel-themes">
+    <div class="section-title">选择学科主题</div>
+    <div class="theme-scroll" id="themeScroll"></div>
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn-secondary" onclick="showPanel('panel-home')">← 返回首页</button>
+    </div>
+  </div>
+
+  <!-- ===== 主题主页 ===== -->
+  <div class="panel" id="panel-theme-home">
+    <div class="theme-home" id="themeHomeContent"></div>
+  </div>
+
+  <!-- ===== 自定义创建 ===== -->
+  <div class="panel" id="panel-create">
+    <div class="section-title">创建你的闯关</div>
+    <div class="creator-card">
+      <div class="form-group">
+        <label>闯关主题名称</label>
+        <input type="text" id="c-title" placeholder="例：帮小兔子回家">
+      </div>
+      <div class="form-group">
+        <label>学科</label>
+        <select id="c-subject">
+          <option value="chinese">语文</option><option value="math">数学</option><option value="english">英语</option>
+          <option value="physics">物理</option><option value="chemistry">化学</option><option value="history">历史</option>
+          <option value="geo">地理</option><option value="politics">道法/政治</option><option value="biology">生物</option>
+          <option value="music">音乐</option><option value="pe">体育</option><option value="art">美术</option>
+          <option value="morality">心理健康</option><option value="tech">信息技术</option><option value="custom">校本/其他</option>
+        </select>
+      </div>
+      <div id="chapterEditors"></div>
+      <button class="btn-add" onclick="addChapter()">+ 添加第 <span id="nextChNum">1</span> 关</button>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showPanel('panel-home')">取消</button>
+        <button class="btn-primary" onclick="createFromForm()">生成闯关</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI 生成 ===== -->
+  <div class="panel" id="panel-ai">
+    <div class="section-title">AI 智能生成</div>
+    <div class="creator-card">
+      <div class="form-group">
+        <label>学科</label>
+        <select id="ai-subject">
+          <option value="chinese">语文</option><option value="math">数学</option><option value="english">英语</option>
+          <option value="physics">物理</option><option value="chemistry">化学</option><option value="history">历史</option>
+          <option value="geo">地理</option><option value="politics">道法/政治</option><option value="biology">生物</option>
+          <option value="music">音乐</option><option value="pe">体育</option><option value="art">美术</option>
+          <option value="morality">心理健康</option><option value="tech">信息技术</option><option value="custom">校本/其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>知识点 / 主题</label>
+        <input type="text" id="ai-topic" placeholder="例：气候类型判断 / 10以内加法">
+      </div>
+      <div class="form-group">
+        <label>年级段</label>
+        <select id="ai-grade">
+          <option value="小学低年级">小学低年级(1-2)</option><option value="小学中年级">小学中年级(3-4)</option>
+          <option value="小学高年级">小学高年级(5-6)</option><option value="初中">初中</option><option value="高中">高中</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>API 平台</label>
+        <select id="ai-endpoint" onchange="onEndpointChange()">
+          <option value="https://api.siliconflow.cn/v1/chat/completions">硅基流动（推荐·注册即送免费额度）</option>
+          <option value="https://api.deepseek.com/chat/completions">DeepSeek（需充值）</option>
+          <option value="custom">自定义地址</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>API 密钥（留空则用本地模板）</label>
+        <input type="password" id="ai-key" placeholder="注册后获取，硅基流动：siliconflow.cn">
+      </div>
+      <div id="api-tip" style="font-size:.72em;color:#00b894;margin-top:-10px;margin-bottom:12px;line-height:1.5">
+        硅基流动注册即送2000万Tokens免费额度，够用很久。<a href="https://cloud.siliconflow.cn" target="_blank" style="color:#6c5ce7;text-decoration:underline">去注册</a> → 登录后到「API密钥」页面创建即可。DeepSeek免费额度用完后需充值，不建议。
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showPanel('panel-home')">取消</button>
+        <button class="btn-primary" onclick="aiGenerate()">🤖 AI 生成闯关</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 闯关界面 ===== -->
+  <div class="panel" id="panel-quest">
+    <div class="quest-nav">
+      <button class="back-btn" onclick="goHome()">← 退出</button>
+      <div class="quest-info" id="questInfo"></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="questContent"></div>
+  </div>
+
+  <!-- ===== 庆祝结果页 ===== -->
+  <div class="panel" id="panel-result">
+    <div id="celebratePage"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== 数据 ====================
+const SUBJECTS = {
+  chinese:{name:'语文',emoji:'📜',theme:'chinese'},
+  math:{name:'数学',emoji:'📐',theme:'math'},
+  english:{name:'英语',emoji:'🔤',theme:'english'},
+  physics:{name:'物理',emoji:'⚡',theme:'physics'},
+  chemistry:{name:'化学',emoji:'⚗️',theme:'chemistry'},
+  history:{name:'历史',emoji:'🏛️',theme:'history'},
+  geo:{name:'地理',emoji:'🌍',theme:'geo'},
+  politics:{name:'道法',emoji:'⚖️',theme:'politics'},
+  biology:{name:'生物',emoji:'🧬',theme:'biology'},
+  music:{name:'音乐',emoji:'🎵',theme:'music'},
+  pe:{name:'体育',emoji:'⚽',theme:'pe'},
+  art:{name:'美术',emoji:'🎨',theme:'art'},
+  morality:{name:'心理',emoji:'💚',theme:'morality'},
+  tech:{name:'信息',emoji:'💻',theme:'tech'},
+  custom:{name:'校本',emoji:'🌟',theme:'custom'}
+};
+
+// 每个主题的配色
+const THEME_STYLE = {
+  chinese:{gradient:'linear-gradient(135deg,#e17055,#fab1a0)',emoji:'📜'},
+  math:{gradient:'linear-gradient(135deg,#0984e3,#74b9ff)',emoji:'📐'},
+  english:{gradient:'linear-gradient(135deg,#6c5ce7,#a29bfe)',emoji:'🔤'},
+  physics:{gradient:'linear-gradient(135deg,#00b894,#55efc4)',emoji:'⚡'},
+  chemistry:{gradient:'linear-gradient(135deg,#00cec9,#81ecec)',emoji:'⚗️'},
+  history:{gradient:'linear-gradient(135deg,#e17055,#fab1a0)',emoji:'🏛️'},
+  geo:{gradient:'linear-gradient(135deg,#00b894,#55efc4)',emoji:'🌍'},
+  politics:{gradient:'linear-gradient(135deg,#d63031,#ff7675)',emoji:'⚖️'},
+  biology:{gradient:'linear-gradient(135deg,#55a630,#a3d977)',emoji:'🧬'},
+  music:{gradient:'linear-gradient(135deg,#a29bfe,#dfe6e9)',emoji:'🎵'},
+  pe:{gradient:'linear-gradient(135deg,#fdcb6e,#ffeaa7)',emoji:'⚽'},
+  art:{gradient:'linear-gradient(135deg,#fd79a8,#fab1a0)',emoji:'🎨'},
+  morality:{gradient:'linear-gradient(135deg,#74b9ff,#a29bfe)',emoji:'💚'},
+  tech:{gradient:'linear-gradient(135deg,#636e72,#b2bec3)',emoji:'💻'},
+  custom:{gradient:'linear-gradient(135deg,#6c5ce7,#a29bfe)',emoji:'🌟'}
+};
+
+// ==================== 场景插图系统 ====================
+// 每个内置主题的每关都有与剧情一致的CSS插画
+function getSceneIllust(themeId, chapterIdx) {
+  const scenes = {
+    chinese_war: [
+      {bg:'linear-gradient(180deg,#2c1810 0%,#5a3825 40%,#8b6914 70%,#c9a227 100%)',elements:'📜',caption:'古老的书院大门',ground:'#5a3825',
+       decor:'<div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(0deg,#3d2b1f,transparent)"></div><div style="position:absolute;top:15%;left:20%;font-size:1.5em;opacity:.3">🏯</div><div style="position:absolute;top:20%;right:18%;font-size:1.2em;opacity:.3">📖</div>'},
+      {bg:'linear-gradient(180deg,#1a0a2e 0%,#3d1f5c 50%,#6c3483 100%)',elements:'🔑',caption:'密室之中',ground:'#1a0a2e',
+       decor:'<div style="position:absolute;top:20%;left:15%;font-size:2em;opacity:.25">🕯️</div><div style="position:absolute;top:18%;right:15%;font-size:2em;opacity:.25">🕯️</div><div style="position:absolute;top:40%;left:50%;transform:translateX(-50%);width:80%;height:2px;background:rgba(255,215,0,.3)"></div>'},
+      {bg:'linear-gradient(180deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',elements:'📚',caption:'藏经阁深处',ground:'#1a1a2e',
+       decor:'<div style="position:absolute;top:10%;left:10%;font-size:1.8em;opacity:.2">📚</div><div style="position:absolute;top:12%;right:10%;font-size:1.8em;opacity:.2">📚</div><div style="position:absolute;bottom:20%;left:50%;transform:translateX(-50%);width:60px;height:60px;border:3px solid rgba(253,203,110,.4);border-radius:50%;animation:glowPulse 2s ease infinite"></div>'}
+    ],
+    geo_detective: [
+      {bg:'linear-gradient(180deg,#0a4d2e 0%,#1e8449 40%,#27ae60 70%,#2ecc71 100%)',elements:'🌧️',caption:'热带雨林深处',ground:'#0a4d2e',
+       decor:'<div style="position:absolute;top:8%;left:10%;font-size:1.5em;opacity:.4">🌴</div><div style="position:absolute;top:5%;right:12%;font-size:1.5em;opacity:.4">🌴</div><div style="position:absolute;top:30%;left:50%;transform:translateX(-50%);font-size:1em;opacity:.3">💧💧💧</div>'},
+      {bg:'linear-gradient(180deg,#f39c12 0%,#e67e22 30%,#d35400 70%,#a04000 100%)',elements:'🍇',caption:'沙漠边缘的葡萄园',ground:'#a04000',
+       decor:'<div style="position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:3em;opacity:.3">☀️</div><div style="position:absolute;bottom:15%;left:15%;font-size:1.5em;opacity:.4">🌵</div><div style="position:absolute;bottom:15%;right:15%;font-size:1.5em;opacity:.4">🌵</div>'},
+      {bg:'linear-gradient(180deg,#5d6d7e 0%,#85929e 40%,#aab7b8 70%,#d5dbdb 100%)',elements:'🐦',caption:'迷雾笼罩的森林',ground:'#5d6d7e',
+       decor:'<div style="position:absolute;top:10%;left:20%;font-size:1.5em;opacity:.3">🌲</div><div style="position:absolute;top:8%;right:18%;font-size:1.5em;opacity:.3">🌲</div><div style="position:absolute;top:25%;left:50%;transform:translateX(-50%);font-size:.8em;opacity:.4;letter-spacing:8px">🍂🍂🍂</div>'}
+    ],
+    math_rabbit: [
+      {bg:'linear-gradient(180deg,#74b9ff 0%,#81ecec 40%,#55efc4 70%,#00b894 100%)',elements:'🍄',caption:'小河边的蘑菇桥',ground:'#2d6a4f',
+       decor:'<div style="position:absolute;bottom:10%;left:10%;font-size:2em">🍄</div><div style="position:absolute;bottom:15%;left:35%;font-size:2.5em">🍄</div><div style="position:absolute;bottom:12%;left:60%;font-size:2em">🍄</div><div style="position:absolute;bottom:18%;right:8%;font-size:2.5em">🍄</div><div style="position:absolute;top:8%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.3">☁️</div>'},
+      {bg:'linear-gradient(180deg,#55efc4 0%,#81ecec 40%,#74b9ff 100%)',elements:'🐿️',caption:'松鼠的大树下',ground:'#2d6a4f',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:4em">🌳</div><div style="position:absolute;top:15%;left:20%;font-size:1.2em;opacity:.4">🌰</div><div style="position:absolute;top:12%;right:20%;font-size:1.2em;opacity:.4">🌰</div>'},
+      {bg:'linear-gradient(180deg,#ffeaa7 0%,#fdcb6e 40%,#f9ca24 70%,#55efc4 100%)',elements:'🥕',caption:'家门口的胡萝卜田',ground:'#55a630',
+       decor:'<div style="position:absolute;bottom:8%;left:15%;font-size:2em">🥕</div><div style="position:absolute;bottom:12%;left:40%;font-size:2em">🥕</div><div style="position:absolute;bottom:8%;right:15%;font-size:2em">🥕</div><div style="position:absolute;bottom:25%;right:5%;font-size:2.5em">🏠</div><div style="position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:2em">🐰</div>'}
+    ],
+    history_timeline: [
+      {bg:'linear-gradient(180deg,#2c3e50 0%,#4a6741 40%,#6d8c54 70%,#8fbc5e 100%)',elements:'⚔️',caption:'战国烽烟',ground:'#2c3e50',
+       decor:'<div style="position:absolute;top:10%;left:15%;font-size:1.5em;opacity:.3">🏯</div><div style="position:absolute;top:8%;right:15%;font-size:1.5em;opacity:.3">🏯</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:1em;opacity:.4">⚔️⚔️⚔️</div>'},
+      {bg:'linear-gradient(180deg,#c9a227 0%,#e0c068 40%,#f0d88a 70%,#f5e6b8 100%)',elements:'🐫',caption:'丝绸之路',ground:'#c9a227',
+       decor:'<div style="position:absolute;bottom:12%;left:10%;font-size:2em">🐫</div><div style="position:absolute;bottom:15%;left:40%;font-size:1.5em;opacity:.4">🐫</div><div style="position:absolute;top:5%;right:10%;font-size:1.5em;opacity:.3">☀️</div><div style="position:absolute;bottom:8%;right:15%;font-size:2.5em">🏛️</div>'},
+      {bg:'linear-gradient(180deg,#1a1a2e 0%,#c0392b 50%,#e74c3c 100%)',elements:'📢',caption:'五四运动现场',ground:'#1a1a2e',
+       decor:'<div style="position:absolute;top:15%;left:20%;font-size:1.5em;opacity:.3">🏛️</div><div style="position:absolute;top:20%;right:15%;font-size:1em;opacity:.4">✊</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);width:70%;height:3px;background:rgba(255,255,255,.2)"></div>'}
+    ],
+    chemistry_lab: [
+      {bg:'linear-gradient(180deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%)',elements:'💨',caption:'深夜的实验室',ground:'#1a1a2e',
+       decor:'<div style="position:absolute;bottom:10%;left:15%;font-size:2em">🧪</div><div style="position:absolute;bottom:12%;right:15%;font-size:2em">🔬</div><div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.3">🌙</div><div style="position:absolute;top:30%;left:30%;font-size:.8em;opacity:.5">💨</div>'},
+      {bg:'linear-gradient(180deg,#0984e3 0%,#74b9ff 40%,#81ecec 100%)',elements:'🧪',caption:'蓝色溶液之谜',ground:'#0984e3',
+       decor:'<div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:3em">⚗️</div><div style="position:absolute;top:15%;left:20%;font-size:1em;opacity:.4">🔵</div><div style="position:absolute;top:20%;right:18%;font-size:1em;opacity:.4">🔵</div>'},
+      {bg:'linear-gradient(180deg,#e17055 0%,#fdcb6e 40%,#f9ca24 100%)',elements:'🔥',caption:'着火了！',ground:'#e17055',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">🔥</div><div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.4">🚨</div>'}
+    ],
+    english_agent: [
+      {bg:'linear-gradient(180deg,#6c5ce7 0%,#a29bfe 40%,#dfe6e9 100%)',elements:'🔐',caption:'被入侵的通讯系统',ground:'#6c5ce7',
+       decor:'<div style="position:absolute;top:10%;left:20%;font-size:1.5em;opacity:.3">📡</div><div style="position:absolute;top:15%;right:18%;font-size:1.5em;opacity:.3">💻</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:1em;opacity:.4">⚠️⚠️⚠️</div>'},
+      {bg:'linear-gradient(180deg,#2d3436 0%,#636e72 40%,#b2bec3 100%)',elements:'🌐',caption:'翻译陷阱',ground:'#2d3436',
+       decor:'<div style="position:absolute;top:10%;left:15%;font-size:2em;opacity:.3">🇨🇳</div><div style="position:absolute;top:10%;right:15%;font-size:2em;opacity:.3">🇬🇧</div><div style="position:absolute;top:35%;left:50%;transform:translateX(-50%);font-size:1em;opacity:.4">↔️</div>'},
+      {bg:'linear-gradient(180deg,#0a0a2e 0%,#1a1a4e 40%,#6c5ce7 100%)',elements:'⏰',caption:'时空裂缝',ground:'#0a0a2e',
+       decor:'<div style="position:absolute;top:15%;left:20%;font-size:2em;opacity:.3">🌀</div><div style="position:absolute;top:20%;right:15%;font-size:2em;opacity:.3">🌀</div><div style="position:absolute;bottom:20%;left:50%;transform:translateX(-50%);width:80px;height:80px;border:3px dashed rgba(255,255,255,.2);border-radius:50%;animation:glowPulse 2s ease infinite"></div>'}
+    ],
+    safety_agent: [
+      {bg:'linear-gradient(180deg,#dfe6e9 0%,#b2bec3 40%,#636e72 100%)',elements:'🚪',caption:'家里的门铃响了',ground:'#636e72',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">🏠</div><div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.4">🔔</div>'},
+      {bg:'linear-gradient(180deg,#e17055 0%,#fdcb6e 40%,#ffeaa7 100%)',elements:'🍳',caption:'厨房着火了！',ground:'#e17055',
+       decor:'<div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:3em">🍳</div><div style="position:absolute;top:20%;left:50%;transform:translateX(-50%);font-size:2em">🔥</div>'},
+      {bg:'linear-gradient(180deg,#74b9ff 0%,#81ecec 40%,#55efc4 100%)',elements:'🚦',caption:'红绿灯坏了的路口',ground:'#74b9ff',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">🚦</div><div style="position:absolute;bottom:8%;left:15%;font-size:1.5em;opacity:.4">🚗</div><div style="position:absolute;bottom:8%;right:15%;font-size:1.5em;opacity:.4">🚗</div>'}
+    ],
+    music_theater: [
+      {bg:'linear-gradient(180deg,#2c1810 0%,#6c3483 40%,#a29bfe 100%)',elements:'🎻',caption:'音乐之门前',ground:'#2c1810',
+       decor:'<div style="position:absolute;top:15%;left:15%;font-size:1.5em;opacity:.3">🎵</div><div style="position:absolute;top:10%;right:18%;font-size:1.5em;opacity:.3">🎶</div><div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);width:80%;height:3px;background:rgba(255,255,255,.15)"></div>'},
+      {bg:'linear-gradient(180deg,#6c3483 0%,#a29bfe 40%,#dfe6e9 100%)',elements:'🎵',caption:'节奏迷宫',ground:'#6c3483',
+       decor:'<div style="position:absolute;top:20%;left:20%;font-size:1.2em;opacity:.4">♩</div><div style="position:absolute;top:25%;left:40%;font-size:1.2em;opacity:.4">♪</div><div style="position:absolute;top:22%;right:25%;font-size:1.2em;opacity:.4">♫</div>'},
+      {bg:'linear-gradient(180deg,#1a1a2e 0%,#2c1810 40%,#c9a227 100%)',elements:'🎹',caption:'时光钢琴',ground:'#1a1a2e',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">🎹</div><div style="position:absolute;top:5%;left:50%;transform:translateX(-50%);font-size:1em;opacity:.3;letter-spacing:6px">✨✨✨</div>'}
+    ],
+    phys_force: [
+      {bg:'linear-gradient(180deg,#636e72 0%,#b2bec3 40%,#dfe6e9 100%)',elements:'🛗',caption:'失灵的电梯',ground:'#636e72',
+       decor:'<div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:50px;height:60px;border:3px solid rgba(255,255,255,.3);border-radius:4px"></div><div style="position:absolute;top:18%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.5">😱</div>'},
+      {bg:'linear-gradient(180deg,#74b9ff 0%,#81ecec 40%,#55efc4 100%)',elements:'🌉',caption:'大桥危在旦夕',ground:'#0984e3',
+       decor:'<div style="position:absolute;bottom:20%;left:10%;font-size:2em">🏛️</div><div style="position:absolute;bottom:20%;right:10%;font-size:2em">🏛️</div><div style="position:absolute;bottom:30%;left:50%;transform:translateX(-50%);width:60%;height:4px;background:rgba(255,255,255,.3)"></div>'},
+      {bg:'linear-gradient(180deg,#0984e3 0%,#74b9ff 40%,#dfe6e9 100%)',elements:'✈️',caption:'飞机起飞跑道',ground:'#0984e3',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);width:80%;height:4px;background:rgba(255,255,255,.2)"></div><div style="position:absolute;top:15%;right:15%;font-size:2em">✈️</div><div style="position:absolute;bottom:8%;left:10%;font-size:1.5em;opacity:.4">💨</div>'}
+    ],
+    bio_journey: [
+      {bg:'linear-gradient(180deg,#e17055 0%,#fab1a0 40%,#ffeaa7 100%)',elements:'👅',caption:'口腔登陆',ground:'#e17055',
+       decor:'<div style="position:absolute;top:20%;left:30%;font-size:1.5em;opacity:.3">🦷</div><div style="position:absolute;top:25%;right:25%;font-size:1em;opacity:.4">💧</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:1.2em;opacity:.4">🦠</div>'},
+      {bg:'linear-gradient(180deg,#c0392b 0%,#e74c3c 40%,#0984e3 100%)',elements:'🩸',caption:'血管迷宫',ground:'#c0392b',
+       decor:'<div style="position:absolute;top:10%;left:20%;width:40%;height:3px;background:rgba(255,0,0,.3);border-radius:4px;transform:rotate(15deg)"></div><div style="position:absolute;top:30%;right:15%;width:30%;height:3px;background:rgba(0,100,255,.3);border-radius:4px;transform:rotate(-10deg)"></div>'},
+      {bg:'linear-gradient(180deg,#f0f4ff 0%,#dfe6e9 40%,#a29bfe 100%)',elements:'🧠',caption:'大脑指挥中心',ground:'#a29bfe',
+       decor:'<div style="position:absolute;top:15%;left:20%;font-size:1em;opacity:.3">⚡</div><div style="position:absolute;top:18%;right:20%;font-size:1em;opacity:.3">⚡</div><div style="position:absolute;top:25%;left:50%;transform:translateX(-50%);font-size:.8em;opacity:.4;letter-spacing:4px">✨✨✨</div>'}
+    ],
+    politics_citizen: [
+      {bg:'linear-gradient(180deg,#74b9ff 0%,#81ecec 40%,#55efc4 100%)',elements:'📋',caption:'新学期的教室',ground:'#74b9ff',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">🏫</div><div style="position:absolute;top:10%;left:15%;font-size:1.5em;opacity:.3">✋</div><div style="position:absolute;top:12%;right:15%;font-size:1.5em;opacity:.3">✋</div>'},
+      {bg:'linear-gradient(180deg,#dfe6e9 0%,#b2bec3 40%,#636e72 100%)',elements:'⚠️',caption:'校门口的陌生人',ground:'#636e72',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:2em">🏫</div><div style="position:absolute;bottom:12%;right:10%;font-size:1.5em;opacity:.4">🧑</div><div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);font-size:1.5em">⚠️</div>'},
+      {bg:'linear-gradient(180deg,#c0392b 0%,#e74c3c 40%,#fdcb6e 100%)',elements:'📜',caption:'宪法之路',ground:'#c0392b',
+       decor:'<div style="position:absolute;bottom:10%;left:50%;transform:translateX(-50%);font-size:3em">⚖️</div><div style="position:absolute;top:10%;left:20%;font-size:1.5em;opacity:.3">🏛️</div><div style="position:absolute;top:10%;right:20%;font-size:1.5em;opacity:.3">🏛️</div>'}
+    ],
+    tech_code: [
+      {bg:'linear-gradient(180deg,#0a0a2e 0%,#1a1a4e 40%,#0984e3 100%)',elements:'💻',caption:'被入侵的交通系统',ground:'#0a0a2e',
+       decor:'<div style="position:absolute;top:10%;left:15%;font-size:1em;opacity:.3;font-family:monospace;color:#00b894">if</div><div style="position:absolute;top:20%;right:15%;font-size:1em;opacity:.3;font-family:monospace;color:#e17055">bug</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:1.2em;opacity:.4">🚦</div>'},
+      {bg:'linear-gradient(180deg,#1a1a2e 0%,#0984e3 40%,#00b894 100%)',elements:'🔁',caption:'循环陷阱',ground:'#1a1a2e',
+       decor:'<div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:60px;height:60px;border:3px dashed rgba(0,184,148,.3);border-radius:50%;animation:glowPulse 2s ease infinite"></div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:1.5em;opacity:.4">🟢🔴🟡</div>'},
+      {bg:'linear-gradient(180deg,#0a0a2e 0%,#2d3436 40%,#636e72 100%)',elements:'💾',caption:'数据封印',ground:'#0a0a2e',
+       decor:'<div style="position:absolute;top:15%;left:20%;font-size:1em;opacity:.3;font-family:monospace;color:#74b9ff">save()</div><div style="position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:2em;opacity:.4">📁</div>'}
+    ]
+  };
+  const key = themeId;
+  const list = scenes[key];
+  if (list && list[chapterIdx]) return list[chapterIdx];
+  // 通用fallback
+  const sub = currentQuest ? (SUBJECTS[currentQuest.subject] || SUBJECTS.custom) : SUBJECTS.custom;
+  const ts = THEME_STYLE[sub.theme] || THEME_STYLE.custom;
+  return {bg:ts.gradient,elements:sub.emoji,caption:'',ground:'#2d3748',decor:''};
+}
+
+// ==================== 内置主题 ====================
+const BUILTIN_THEMES = [
+  {id:'chinese_war',subject:'chinese',name:'古诗寻宝记',emoji:'📜',desc:'穿越回古代，从诗句中寻找宝藏线索',
+   introText:'你是一名穿越时空的书生，来到了一座古老的书院。书院中藏着无价的诗词宝藏，但只有真正理解诗意的人才能找到……',
+   chapters:[
+    {title:'第一关：暗号解码',story:'你来到一座古老的书院。书院大门紧闭，门上刻着一首诗：「春风不度玉门关」。守门人说：解开诗中隐藏的地理知识，才能进入书院。',question:'「春风不度玉门关」中的「玉门关」在哪里？',choices:['华北平原','河西走廊','长江三角洲','四川盆地'],correct:1,explanation:'玉门关位于甘肃敦煌以西的河西走廊，是古代丝绸之路的重要关隘。春风指温暖的东南季风，受祁连山等阻挡，难以到达西北内陆。'},
+    {title:'第二关：诗人密室',story:'书院内有一间密室，墙壁上写着三首诗，都描写了同一种自然现象。你必须找出这个共同现象，才能拿到钥匙。',question:'以下哪组诗句描写的自然现象是相同的？',choices:['「飞流直下三千尺」与「大漠孤烟直」','「忽如一夜春风来」与「燕山雪花大如席」','「两岸猿声啼不住」与「月落乌啼霜满天」','「离离原上草」与「春眠不觉晓」'],correct:1,explanation:'「忽如一夜春风来，千树万树梨花开」和「燕山雪花大如席」都描写了北方的雪景，以雪为喻是古诗中的经典手法。'},
+    {title:'第三关：藏经阁',story:'你终于进入藏经阁，架子上摆着四本古籍。传说其中一本藏有终极宝藏的线索，但只有理解诗词意境的人才能辨别真伪。',question:'「但愿人长久，千里共婵娟」表达了什么情感？',choices:['对战争的厌恶','对远方亲人的思念和祝福','对功名利禄的追求','对田园生活的向往'],correct:1,explanation:'这是苏轼中秋夜思念弟弟苏辙所作，表达了对亲人的美好祝愿——即使相隔千里，也能共赏同一轮明月。'}
+  ]},
+  {id:'geo_detective',subject:'geo',name:'气候大侦探',emoji:'🌍',desc:'化身气候学家，根据线索破译神秘地点的气候密码',
+   introText:'一支考察队在神秘地点失踪了！唯一的线索是他们的日志。作为气候大侦探，你必须根据气候线索找到他们……',
+   chapters:[
+    {title:'第一关：消失的考察队',story:'一支考察队在神秘地点失踪了！唯一的线索是他们的日志：「这里终年高温，1月和7月几乎一样热，每天下午准时下暴雨。」你必须根据线索判断这是什么气候类型。',question:'日志描述的是哪种气候类型？',choices:['地中海气候','热带雨林气候','温带季风气候','热带沙漠气候'],correct:1,explanation:'终年高温+全年多雨（午后雷阵雨）=热带雨林气候。典型地区：赤道附近的亚马孙平原、刚果盆地、马来群岛。'},
+    {title:'第二关：沙漠里的葡萄园',story:'你追踪到第二个线索：某地在沙漠边缘，居然种出了甜美的葡萄！当地人说：「夏天特别热，但冬天温和多雨，葡萄就靠冬天攒的水分活着。」',question:'这最可能是哪种气候？',choices:['热带草原气候','地中海气候','温带海洋性气候','亚热带季风气候'],correct:1,explanation:'夏季炎热干燥、冬季温和多雨=地中海气候。正是这种独特的"雨热不同期"特征，让地中海沿岸盛产葡萄、橄榄。'},
+    {title:'第三关：迷雾中的候鸟',story:'最后一条线索来自候鸟的迁徙路线：每年夏天，大批候鸟飞往此地筑巢——这里有漫长的暖夏和茂密的落叶林。而冬天，树叶全部凋落，候鸟又飞走了。',question:'候鸟的目的地是什么气候？',choices:['热带季风气候','温带季风气候','寒带气候','高原山地气候'],correct:1,explanation:'夏季温暖多雨、冬季寒冷干燥+落叶阔叶林=温带季风气候。典型地区：中国华北、东北，日本、朝鲜半岛。'}
+  ]},
+  {id:'math_rabbit',subject:'math',name:'帮小兔子回家',emoji:'🐰',desc:'一年级数学冒险，每答对一关小兔子前进一步',
+   introText:'小兔子蹦蹦迷路了！回家的路上有蘑菇桥、松鼠的坚果、还有胡萝卜田。你能帮蹦蹦算对每一关，平安到家吗？',
+   chapters:[
+    {title:'第一关：蘑菇桥',story:'小兔子蹦蹦走在回家的路上，遇到一条小河。河上有一座蘑菇桥，每个蘑菇上写着一个数字。蹦蹦必须踩在数字比5大的蘑菇上才能安全过河。',question:'下面哪个数字比5大？',choices:['3','7','4','2'],correct:1,explanation:'7比5大！所以蹦蹦要踩在写7的蘑菇上。记住：7在5的右边，右边的数更大哦！'},
+    {title:'第二关：松鼠的坚果',story:'过桥后蹦蹦遇到了松鼠。松鼠说：「我有8颗坚果，送给你3颗，我还有几颗？」帮松鼠算一算吧！',question:'8 - 3 = ？',choices:['3','5','6','4'],correct:1,explanation:'8颗拿走3颗，还剩5颗。8 - 3 = 5，松鼠还有5颗坚果！'},
+    {title:'第三关：胡萝卜田',story:'蹦蹦快到家了！家门口的胡萝卜田里，左边种了4根胡萝卜，右边种了3根。蹦蹦想知道一共种了多少根？',question:'4 + 3 = ？',choices:['6','8','7','5'],correct:2,explanation:'4 + 3 = 7！左边4根右边3根，合起来一共7根胡萝卜。蹦蹦到家啦！'}
+  ]},
+  {id:'history_timeline',subject:'history',name:'时间守护者',emoji:'🏛️',desc:'穿越历史关键时刻，守护时间线不被篡改',
+   introText:'时间线出现了裂痕！有人试图篡改历史。你是唯一的时间守护者，必须穿越到关键历史时刻，还原真相……',
+   chapters:[
+    {title:'第一关：秦朝危机',story:'时间线出现裂痕！有人试图篡改秦统一六国的历史。你必须找到正确的时间节点，才能修复裂痕。',question:'秦统一六国是在哪一年？',choices:['公元前770年','公元前221年','公元前206年','公元前138年'],correct:1,explanation:'公元前221年，秦王嬴政灭六国，建立中国第一个统一的多民族封建国家——秦朝。这个年份是中考高频考点！'},
+    {title:'第二关：丝绸之路',story:'时间守护者告诉你，丝绸之路的起点被修改了！你必须确认真正的起点城市。',question:'丝绸之路的起点是哪座城市？',choices:['洛阳','长安','咸阳','开封'],correct:1,explanation:'丝绸之路的起点是长安（今西安）。张骞出使西域，开辟了从长安经河西走廊、西域到中亚、西亚的商路。'},
+    {title:'第三关：五四运动',story:'最后一道裂痕出现在近代史。时间篡改者企图抹去五四运动的具体导火索。你必须还原历史真相！',question:'五四运动的直接导火索是什么？',choices:['辛亥革命失败','巴黎和会中国外交失败','新文化运动兴起','北伐战争开始'],correct:1,explanation:'1919年巴黎和会上，列强将德国在山东的权益转让给日本，中国外交失败，直接引发了五四运动。这是中国新民主主义革命的开端。'}
+  ]},
+  {id:'chemistry_lab',subject:'chemistry',name:'实验室惊魂夜',emoji:'⚗️',desc:'深夜实验室闯入者打翻了试剂，你必须通过推理还原真相',
+   introText:'深夜，实验室的窗户被吹开了！一股刺激性气味扑面而来……打翻的试剂瓶、消失的铜片、还有着火的实验台！你能还原真相吗？',
+   chapters:[
+    {title:'第一关：神秘气体',story:'深夜，实验室的窗户被吹开了！你闻到一股刺激性气味，发现桌上有一个打翻的集气瓶，里面的气体使湿润的红色石蕊试纸变蓝。这是谁打翻的？',question:'能使湿润红色石蕊试纸变蓝的气体是？',choices:['二氧化碳','氨气','氯化氢','氧气'],correct:1,explanation:'氨气（NH₃）是唯一的碱性气体，溶于水呈碱性，能使湿润的红色石蕊试纸变蓝。这是检验氨气的经典方法！'},
+    {title:'第二关：消失的铜片',story:'你发现一烧杯中的铜片消失了，溶液变成了蓝色！旁边有一张纸条写着实验记录。你需要判断烧杯里原来装的是什么。',question:'什么溶液能让铜片溶解并使溶液变蓝？',choices:['稀硫酸','稀盐酸','硝酸银溶液','氯化钠溶液'],correct:2,explanation:'铜不能和稀硫酸、稀盐酸反应（铜在金属活动性顺序中排在氢后面）。但铜能和硝酸银反应：Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag，生成蓝色溶液！'},
+    {title:'第三关：灭火行动',story:'警报响了！实验台着火了！灭火器就在旁边，但你必须选对灭火器才能扑灭这种特殊的化学火灾。',question:'扑灭化学品火灾，不应使用什么？',choices:['二氧化碳灭火器','干粉灭火器','泡沫灭火器','沙土'],correct:2,explanation:'泡沫灭火器喷出的泡沫含水，与某些化学品（如活泼金属、浓硫酸等）接触会产生更剧烈的反应，反而会扩大火情。化学品火灾应优先用干粉或CO₂灭火器。'}
+  ]},
+  {id:'english_agent',subject:'english',name:'拯救英语星球',emoji:'🔤',desc:'外星人打乱了英语世界的秩序，你是唯一的特工',
+   introText:'外星入侵者打乱了英语世界的秩序！通讯系统被破坏，翻译系统被植入陷阱，时空出现了裂缝。你是唯一能拯救英语星球的特工……',
+   chapters:[
+    {title:'第一关：密码破译',story:'英语星球的通讯系统被破坏了！恢复通讯需要输入正确的密码。密码隐藏在一个常用短语中，你必须选出正确的表达。',question:'"我每天花一小时做作业"的正确表达是？',choices:['I spend one hour to do homework every day','I spend one hour doing homework every day','I cost one hour doing homework every day','I take one hour do homework every day'],correct:1,explanation:'spend time doing sth. 是固定搭配，注意：spend的主语是人，cost的主语是物，take常用It takes sb. time to do sth.结构。'},
+    {title:'第二关：翻译陷阱',story:'通讯恢复了，但翻译系统被植入了陷阱！屏幕上显示4个翻译，只有1个是正确的。你必须识别出正确的那个。',question:'"The book on the desk is mine."的正确翻译是？',choices:['书在桌子上是我的','桌子上的那本书是我的','书上面桌子是我的','桌子在书上是我的'],correct:1,explanation:'"on the desk"是介词短语作后置定语，修饰"the book"，翻译时要放在名词前面：桌子上的那本书。"mine"= my book。'},
+    {title:'第三关：时时空洞',story:'时空出现空洞！过去的你和现在的你同时出现，但用了不同的时态。你必须纠正时态错误，才能让时空恢复正常。',question:'"I have went to Beijing last year."这句话的时态有什么问题？',choices:['没有问题','应用went而非have went','应用go而非went','应用will go'],correct:1,explanation:'"last year"是明确的过去时间标志，必须用一般过去时went，不能用现在完成时have gone/have went。而且went本身就是go的过去式，have went是双重错误！'}
+  ]},
+  {id:'safety_agent',subject:'morality',name:'小小安全特工',emoji:'🛡️',desc:'城市出现3个危险状况，只有你能阻止',
+   introText:'城市出现了3个危险信号！有陌生人敲门、厨房着火、红绿灯坏了……你是小小安全特工，必须做出正确的选择！',
+   chapters:[
+    {title:'第一关：陌生来客',story:'你接到任务：有人按了家门铃，说是"爸爸的朋友"来取东西。家里只有你一个人。特工守则告诉你应该怎么做？',question:'独自在家，陌生人敲门说认识你爸妈，你应该？',choices:['开门让他进来等','不开门，告诉爸妈后再决定','从猫眼看看再说','让他从窗户拿东西'],correct:1,explanation:'不管陌生人说什么，独自在家时绝对不能开门。先联系父母确认，如果对方纠缠，拨打110报警。安全第一！'},
+    {title:'第二关：厨房警报',story:'警报！邻居家的厨房冒出了烟，闻到了焦味。你冲过去发现锅里的油着火了！你必须迅速选择正确的灭火方法。',question:'油锅着火了，正确的做法是？',choices:['往锅里倒水灭火','用锅盖盖住油锅','用湿毛巾扑打','把油锅搬到室外'],correct:1,explanation:'油锅着火绝对不能倒水！水遇热油会瞬间汽化，造成油花飞溅。正确做法是迅速盖上锅盖，隔绝空气灭火。这是非常实用的安全常识。'},
+    {title:'第三关：马路抉择',story:'最后一个危险：学校门口的红绿灯坏了！你站在马路边，两边没有车过来。同学们都在催你快走。',question:'红绿灯坏了，路上暂时没车，你应该？',choices:['跟着大家跑过去','确认两边安全后再通过','闭着眼冲过去','等大人来指挥再走'],correct:1,explanation:'即使没有红绿灯和车辆，也要"一停二看三通过"：先停下来，左右看清确认安全，再快速通过。跟着别人跑是最危险的选择！'}
+  ]},
+  {id:'music_theater',subject:'music',name:'穿越乐团迷途',emoji:'🎵',desc:'在音乐的世界里迷路了，用你的音乐知识找到回家的路',
+   introText:'你闯入了一个神奇的音乐世界！巨大的乐器之门、节奏迷宫、时光钢琴……只有运用音乐知识，才能找到回家的路……',
+   chapters:[
+    {title:'第一关：乐器之门',story:'你来到了一扇巨大的音乐之门前。门上有四个乐器图案，但你必须选出属于中国民族乐器的那一个，门才会打开。',question:'以下哪个是中国民族乐器？',choices:['小提琴','二胡','钢琴','长笛'],correct:1,explanation:'二胡是中国最具代表性的拉弦乐器，已有一千多年历史。小提琴和长笛源自欧洲，钢琴也是西洋乐器。'},
+    {title:'第二关：节奏迷宫',story:'穿过大门后你进入了节奏迷宫。墙壁上刻着一段节奏符号，你必须判断它的节拍类型才能找到出口。',question:'"强-弱-弱"是什么节拍？',choices:['二拍子','三拍子','四拍子','六拍子'],correct:1,explanation:'三拍子的规律是"强-弱-弱"，最典型的就是华尔兹（圆舞曲）的节奏。感受一下：嘭-嚓-嚓～'},
+    {title:'第三关：时光乐章',story:'迷宫的尽头有一架时光钢琴，弹奏正确时期的音乐才能回家。琴键上标注着四个音乐时期，你必须选出贝多芬所在的时期。',question:'贝多芬属于哪个音乐时期？',choices:['巴洛克时期','古典主义时期','浪漫主义时期','现代音乐时期'],correct:1,explanation:'贝多芬（1770-1827）是古典主义时期的代表人物，被称为"乐圣"。他的晚期作品也开启了浪漫主义的先河。'}
+  ]},
+  {id:'phys_force',subject:'physics',name:'力学救援行动',emoji:'⚡',desc:'城市里出现力学异常，用物理知识拯救一切',
+   introText:'城市出现了力学异常！电梯失灵、大桥裂缝、飞机无法起飞……只有运用力学知识，才能化解危机！',
+   chapters:[
+    {title:'第一关：电梯危机',story:'电梯突然失灵了！显示屏上跳出一行字："选择正确答案恢复运行。"你看到电梯里有一个弹簧秤，挂着一个100g的砝码，此时弹簧秤的读数是0.98N。',question:'如果电梯加速上升，弹簧秤的读数会怎样变化？',choices:['变小','变大','不变','无法判断'],correct:1,explanation:'电梯加速上升时，砝码受到向上的合力，弹簧秤的拉力需要同时平衡重力和提供向上的加速度，因此读数变大。这就是"超重"现象！'},
+    {title:'第二关：桥梁保卫战',story:'城市大桥出现了裂缝！工程师说，必须计算桥面能承受的最大压强。一辆重2吨的卡车停在10平方米的桥面上。',question:'卡车对桥面的压强约为？（g取10N/kg）',choices:['2000Pa','20000Pa','200000Pa','2000000Pa'],correct:0,explanation:'F=G=mg=2000kg×10N/kg=20000N，S=10m²，P=F/S=20000N/10m²=2000Pa。注意：2000Pa其实很小，一张报纸平放对桌面的压强约1Pa。'},
+    {title:'第三关：飞行密码',story:'最后一关：一架飞机需要计算升力才能起飞！密码隐藏在伯努利原理中。',question:'飞机升力的产生，主要原因是？',choices:['机翼下方空气流速快、压强小','机翼上方空气流速快、压强小','机翼上下空气流速相同','飞机发动机向下喷气'],correct:1,explanation:'机翼上表面弯曲，空气流速快，压强小；下表面平直，空气流速慢，压强大。上下表面的压强差产生向上的升力。这就是伯努利原理！'}
+  ]},
+  {id:'bio_journey',subject:'biology',name:'人体探险记',emoji:'🧬',desc:'缩小到细胞大小，在人体内部展开冒险',
+   introText:'你被缩小到了1微米！进入了一个巨大的人体世界。口腔、血管、大脑……你必须在人体内部找到出路！',
+   chapters:[
+    {title:'第一关：口腔登陆',story:'你被缩小到1微米，进入了人体口腔。这里到处都是食物残渣和唾液。你必须找到正确的消化途径才能继续深入。',question:'唾液中的淀粉酶能分解什么物质？',choices:['蛋白质','淀粉','脂肪','维生素'],correct:1,explanation:'唾液淀粉酶专门分解淀粉为麦芽糖。口腔中的消化主要是对淀粉的初步分解，蛋白质和脂肪的消化主要在小肠中进行。'},
+    {title:'第二关：血管迷宫',story:'你进入了一条血管，发现两边的细胞一个是暗红色、一个是鲜红色。你必须选择正确的路线到达目的地。',question:'含氧多的动脉血呈什么颜色？',choices:['暗红色','鲜红色','紫色','淡黄色'],correct:1,explanation:'动脉血含氧丰富，血红蛋白与氧结合后呈鲜红色；静脉血含氧少，呈暗红色。注意：肺动脉流的是静脉血，肺静脉流的是动脉血——血管名称看流向，不看含氧量！'},
+    {title:'第三关：神经指挥中心',story:'你终于到达了大脑！这里是人体的指挥中心。你必须正确识别大脑各区域的功能，才能完成最后的任务。',question:'人体最高级的神经中枢位于？',choices:['小脑','脑干','大脑皮层','脊髓'],correct:2,explanation:'大脑皮层是调节人体生理活动的最高级中枢，包含躯体运动中枢、躯体感觉中枢、视觉中枢、语言中枢等重要区域。小脑管平衡，脑干管基本生命活动。'}
+  ]},
+  {id:'politics_citizen',subject:'politics',name:'公民成长记',emoji:'⚖️',desc:'从校园到社会，学会做一个合格的小公民',
+   introText:'新学期开始了！从制定班级规则到面对陌生人、再到理解宪法，你将一步步成长为合格的小公民……',
+   chapters:[
+    {title:'第一关：教室公约',story:'新学期开始了，同学们一起制定班级公约。有人提议"班长说了算"，有人提议"大家投票决定"。你觉得哪种方式更好？',question:'制定班级规则应该遵循什么原则？',choices:['谁成绩好谁说了算','民主协商，少数服从多数','老师一个人定','不需要规则'],correct:1,explanation:'班级规则的制定应该体现民主精神，通过协商讨论、投票表决的方式，让每个人都有参与决策的权利。这也是法治社会的基本精神。'},
+    {title:'第二关：权利课堂',story:'学校门口来了一个陌生人，要同学们填一份个人信息表，包括家庭住址和父母电话。老师不在，你需要做出判断。',question:'面对陌生人索要个人信息，你应该？',choices:['配合填写，要礼貌','拒绝并告诉老师或家长','随便填个假的','让他去找别的同学'],correct:1,explanation:'个人信息受法律保护，未成年人更应注意信息安全。遇到此类情况，要果断拒绝并及时告知老师或家长。这是保护自己权利的表现。'},
+    {title:'第三关：法治之路',story:'毕业前，老师出了一道题：国家权力的来源是什么？这不仅是课本知识，更是每个公民应了解的常识。',question:'"中华人民共和国的一切权力属于人民"这句话出自哪里？',choices:['刑法','民法典','宪法','教育法'],correct:2,explanation:'宪法是国家的根本法，规定国家生活中最根本的问题。"一切权力属于人民"是宪法的核心原则。宪法具有最高法律效力，其他法律不得与宪法相抵触。'}
+  ]},
+  {id:'tech_code',subject:'tech',name:'代码救援行动',emoji:'💻',desc:'系统崩溃了！用编程知识修复bug，拯救数据',
+   introText:'城市交通系统被病毒入侵了！红绿灯乱闪、循环失控、数据即将丢失……只有编程高手才能拯救一切！',
+   chapters:[
+    {title:'第一关：逻辑断裂',story:'城市交通信号系统被病毒入侵了！你必须在3个逻辑选项中找出正确的那一个，才能恢复红绿灯的正常运行。',question:'在Python中，以下哪种是正确的条件判断语句？',choices:['if x = 5:','if x == 5:','if x := 5:','if x equals 5:'],correct:1,explanation:'"=="是比较运算符，用于判断两个值是否相等。"="是赋值运算符，不能用于条件判断。这是初学者最容易犯的错误！'},
+    {title:'第二关：循环陷阱',story:'信号灯恢复了，但控制循环的代码出了问题——红绿灯一直在"绿→红→绿→红"之间跳动，跳过了黄灯！你需要找到循环的正确写法。',question:'要让程序重复执行5次，应该使用？',choices:['for i in range(5):','for i = 1 to 5:','repeat 5 times:','loop(5):'],correct:0,explanation:'Python中用for循环和range()函数控制重复次数。range(5)会产生0,1,2,3,4共5个数，循环体执行5次。这是最常用的循环方式。'},
+    {title:'第三关：数据封印',story:'最后一步：将修复好的程序保存起来。但文件操作的代码有bug，数据可能无法正确保存！你需要选择正确的文件写入方式。',question:'在Python中，以写入模式打开文件的正确方式是？',choices:['f = open("data.txt", "r")','f = open("data.txt", "w")','f = open("data.txt", "x")','f = open("data.txt", "read")'],correct:1,explanation:'"w"模式是写入模式（write），会创建新文件或覆盖已有文件。"r"是只读模式，无法写入。记住：r=read, w=write, a=append。'}
+  ]}
+];
+
+// ==================== 状态 ====================
+let currentQuest = null;
+let currentChapter = 0;
+let correctCount = 0;
+let chapterCount = 0;
+let customChapters = [];
+let countdownTimer = null;
+
+// ==================== UI 切换 ====================
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(id);
+  panel.classList.add('active');
+  if (currentQuest) {
+    const sub = SUBJECTS[currentQuest.subject] || SUBJECTS.custom;
+    panel.setAttribute('data-theme', sub.theme);
+  }
+  if (id === 'panel-themes') renderThemeScroll();
+  if (id === 'panel-create') initCreator();
+}
+
+function goHome() { showPanel('panel-home'); currentQuest = null; }
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'success' ? ' success' : '');
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+// ==================== 主题选择 ====================
+function renderThemeScroll() {
+  const el = document.getElementById('themeScroll');
+  el.innerHTML = BUILTIN_THEMES.map(t => {
+    const ts = THEME_STYLE[t.subject] || THEME_STYLE.custom;
+    return `<div class="t-card" onclick="openThemeHome('${t.id}')" style="background:${ts.gradient}22;border-color:${ts.gradient.includes('#')?ts.gradient.match(/#[0-9a-f]{6}/i)?.[0]||'#e2e8f0':'#e2e8f0'}">
+      <span class="t-emoji">${t.emoji}</span>
+      <div class="t-name">${t.name}</div>
+      <span class="t-tag">${SUBJECTS[t.subject]?.name||'综合'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ==================== 主题主页 ====================
+function openThemeHome(id) {
+  const theme = BUILTIN_THEMES.find(t => t.id === id);
+  if (!theme) return;
+  currentQuest = theme;
+  currentChapter = 0; correctCount = 0; chapterCount = theme.chapters.length;
+
+  const sub = SUBJECTS[theme.subject] || SUBJECTS.custom;
+  const ts = THEME_STYLE[sub.theme] || THEME_STYLE.custom;
+  const panel = document.getElementById('panel-theme-home');
+  panel.setAttribute('data-theme', sub.theme);
+
+  // 主题主页的大插图
+  const scene0 = getSceneIllust(id, 0);
+
+  document.getElementById('themeHomeContent').innerHTML = `
+    <div class="theme-hero" style="min-height:320px">
+      <div class="theme-hero-bg" style="background:${scene0.bg}"></div>
+      <div style="position:absolute;inset:0;z-index:0">${scene0.decor}</div>
+      <div class="theme-hero-content">
+        <div class="th-emoji">${theme.emoji}</div>
+        <div class="th-title" style="color:#fff">${theme.name}</div>
+        <div class="th-desc">${theme.desc}</div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:20px;margin-top:-16px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
+      <div style="font-size:.72em;color:#a0aec0;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-weight:600">剧情简介</div>
+      <p style="font-size:.98em;line-height:1.85;color:#4a5568;margin-bottom:8px">${theme.introText || ''}</p>
+      <div style="font-size:.78em;color:#a0aec0;margin-top:8px">${chapterCount} 关挑战等你来闯</div>
+    </div>
+    <div style="text-align:center;margin-top:20px;display:flex;gap:10px;justify-content:center">
+      <button class="btn-secondary" onclick="showPanel('panel-themes')">← 返回</button>
+      <button class="theme-start-btn" onclick="startQuestIntro()" style="background:${ts.gradient};color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.2)">开始闯关 →</button>
+    </div>
+  `;
+  showPanel('panel-theme-home');
+}
+
+// ==================== 入场动画 ====================
+function startQuestIntro() {
+  const theme = currentQuest;
+  const sub = SUBJECTS[theme.subject] || SUBJECTS.custom;
+  const scene = getSceneIllust(theme.id, currentChapter);
+
+  // 创建全屏覆盖层
+  const overlay = document.createElement('div');
+  overlay.className = 'intro-overlay';
+  overlay.innerHTML = `
+    <div class="intro-scene" style="background:${scene.bg}">
+      <div style="position:absolute;inset:0">${scene.decor}</div>
+      <div style="position:relative;z-index:1;font-size:5em;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))">${scene.elements}</div>
+    </div>
+    <div class="intro-text" id="introText">${theme.chapters[0].story}</div>
+  `;
+  document.body.appendChild(overlay);
+
+  // 字幕缓慢浮现
+  setTimeout(() => {
+    const textEl = document.getElementById('introText');
+    if (textEl) textEl.classList.add('reveal');
+  }, 600);
+
+  // 3秒后开始倒计时
+  setTimeout(() => {
+    overlay.remove();
+    startCountdown();
+  }, 3800);
+}
+
+function startCountdown() {
+  showPanel('panel-quest');
+  renderChapter();
+
+  // 先隐藏选项，显示倒计时
+  const choicesEl = document.getElementById('choicesContainer');
+  const questionEl = document.querySelector('.question-text');
+  const storyEl = document.querySelector('.story-box');
+  if (choicesEl) choicesEl.style.display = 'none';
+  if (questionEl) questionEl.style.display = 'none';
+
+  // 插入倒计时条
+  const cdBar = document.createElement('div');
+  cdBar.className = 'countdown-bar';
+  cdBar.innerHTML = '<span class="cd-num" id="cdNum">5</span><div class="cd-track"><div class="cd-fill" id="cdFill" style="width:100%"></div></div><span>秒后出题</span>';
+  const questContent = document.getElementById('questContent');
+  questContent.insertBefore(cdBar, questContent.querySelector('.story-box')?.nextSibling || questContent.firstChild);
+
+  let remaining = 5;
+  const cdFill = document.getElementById('cdFill');
+  const cdNum = document.getElementById('cdNum');
+
+  countdownTimer = setInterval(() => {
+    remaining--;
+    if (cdNum) cdNum.textContent = remaining;
+    if (cdFill) cdFill.style.width = (remaining / 5 * 100) + '%';
+    if (remaining <= 0) {
+      clearInterval(countdownTimer);
+      cdBar.remove();
+      if (choicesEl) { choicesEl.style.display = 'flex'; choicesEl.style.animation = 'fadeUp .4s ease'; }
+      if (questionEl) { questionEl.style.display = 'block'; questionEl.style.animation = 'fadeUp .4s ease'; }
+    }
+  }, 1000);
+}
+
+// ==================== 闯关渲染 ====================
+function renderChapter() {
+  const ch = currentQuest.chapters[currentChapter];
+  const sub = SUBJECTS[currentQuest.subject] || SUBJECTS.custom;
+  const themeKey = sub.theme;
+  const progress = ((currentChapter) / chapterCount * 100).toFixed(0);
+
+  const questPanel = document.getElementById('panel-quest');
+  questPanel.setAttribute('data-theme', themeKey);
+
+  document.getElementById('questInfo').innerHTML = `${currentQuest.name} · <strong>${currentChapter + 1}/${chapterCount}</strong>`;
+  const progressFill = document.getElementById('progressFill');
+  progressFill.style.width = progress + '%';
+  progressFill.style.background = `var(--theme-gradient)`;
+
+  // 场景插图
+  let illustHtml = '';
+  if (ch.video) {
+    illustHtml = `<video class="sc-media" src="${ch.video}" controls playsinline preload="metadata" style="width:100%;min-height:200px;border-radius:20px 20px 0 0"></video>`;
+  } else if (ch.image) {
+    illustHtml = `<img src="${ch.image}" style="width:100%;min-height:200px;object-fit:cover;border-radius:20px 20px 0 0;display:block" alt="场景图">`;
+  } else {
+    const scene = getSceneIllust(currentQuest.id, currentChapter);
+    illustHtml = `
+      <div class="scene-illust" style="background:${scene.bg}">
+        <div style="position:absolute;inset:0">${scene.decor}</div>
+        <div class="si-elements" style="position:relative;z-index:1">${scene.elements}</div>
+        ${scene.caption ? `<div class="si-caption">${scene.caption}</div>` : ''}
+      </div>`;
+  }
+
+  const labels = ['A','B','C','D'];
+  const content = document.getElementById('questContent');
+  content.innerHTML = `
+    <div class="scene-card">
+      ${illustHtml}
+      <div class="sc-body">
+        <div class="sc-chapter">第 ${currentChapter + 1} 关</div>
+        <div class="sc-title">${ch.title || ''}</div>
+      </div>
+    </div>
+    <div class="story-box">${ch.story}</div>
+    <div class="question-text">${ch.question}</div>
+    <div class="choices" id="choicesContainer">
+      ${ch.choices.map((c, i) => `
+        <button class="choice-btn" data-idx="${i}" onclick="selectChoice(${i})">
+          <span class="ch-label">${labels[i]}</span>
+          <span>${c}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div id="explainArea"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextChapter()">
+      ${currentChapter < chapterCount - 1 ? '下一关 →' : '查看结果'}
+    </button>
+  `;
+}
+
+function selectChoice(idx) {
+  const ch = currentQuest.chapters[currentChapter];
+  const btns = document.querySelectorAll('.choice-btn');
+
+  btns.forEach(b => {
+    b.classList.add('disabled');
+    const bIdx = parseInt(b.dataset.idx);
+    if (bIdx === ch.correct) b.classList.add('correct');
+    if (bIdx === idx && idx !== ch.correct) b.classList.add('wrong');
+  });
+
+  if (idx === ch.correct) {
+    correctCount++;
+    // 同步积分到工具箱：答对+3分
+    if(window._tbStudent){
+      if(window.parent && window.parent !== window)
+        window.parent.postMessage({source:'toolbox2',type:'addPoints',name:window._tbStudent,delta:3},'*');
+    }
+    document.getElementById('explainArea').innerHTML = `<div class="explain-box"><div class="exp-label">答对了！解析</div>${ch.explanation}</div>`;
+  } else {
+    document.getElementById('explainArea').innerHTML = `<div class="explain-box wrong-exp"><div class="exp-label">答错了，正确答案是 ${['A','B','C','D'][ch.correct]}</div>${ch.explanation}</div>`;
+  }
+
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function nextChapter() {
+  currentChapter++;
+  if (currentChapter >= chapterCount) {
+    showResult();
+  } else {
+    // 后续关卡不再有倒计时，但仍有入场动画
+    showPanel('panel-quest');
+    renderChapterWithTransition();
+  }
+}
+
+function renderChapterWithTransition() {
+  const ch = currentQuest.chapters[currentChapter];
+  const scene = getSceneIllust(currentQuest.id, currentChapter);
+
+  // 短暂的全屏过渡
+  const overlay = document.createElement('div');
+  overlay.className = 'intro-overlay';
+  overlay.style.background = scene.bg;
+  overlay.innerHTML = `
+    <div style="font-size:4em;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))">${scene.elements}</div>
+    <div class="intro-text" id="introText2" style="margin-top:20px;font-size:.95em;max-width:350px">${scene.caption || ch.title || ''}</div>
+  `;
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    const t2 = document.getElementById('introText2');
+    if (t2) t2.classList.add('reveal');
+  }, 300);
+
+  setTimeout(() => {
+    overlay.remove();
+    showPanel('panel-quest');
+    renderChapter();
+  }, 2000);
+}
+
+// ==================== 庆祝结果页 ====================
+function showResult() {
+  const ratio = correctCount / chapterCount;
+  let stars, msg, badgeText, badgeColor;
+
+  if (ratio >= 1) {
+    stars = '🏆⭐⭐⭐';
+    msg = '全部通关！你是这个主题的专家！太厉害了！';
+    badgeText = '闯关大师';
+    badgeColor = 'linear-gradient(135deg,#fdcb6e,#e17055)';
+  } else if (ratio >= 0.66) {
+    stars = '🌟⭐⭐';
+    msg = '很不错！再挑战一次就能拿满星！';
+    badgeText = '闯关达人';
+    badgeColor = 'linear-gradient(135deg,#74b9ff,#6c5ce7)';
+  } else {
+    stars = '⭐';
+    msg = '继续加油，多练几次就能全对！';
+    badgeText = '勇者之路';
+    badgeColor = 'linear-gradient(135deg,#55efc4,#00b894)';
+  }
+
+  const page = document.getElementById('celebratePage');
+
+  // 生成彩纸碎片
+  const confettiColors = ['#e17055','#fdcb6e','#00b894','#74b9ff','#a29bfe','#fd79a8','#55efc4','#ffeaa7'];
+  let confettiHtml = '';
+  for (let i = 0; i < 40; i++) {
+    const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 3;
+    const duration = 2 + Math.random() * 3;
+    const size = 6 + Math.random() * 8;
+    confettiHtml += `<div class="confetti" style="left:${left}%;width:${size}px;height:${size}px;background:${color};animation-delay:${delay}s;animation-duration:${duration}s;border-radius:${Math.random()>.5?'50%':'2px'}"></div>`;
+  }
+
+  page.innerHTML = `
+    <div class="celebrate-page">
+      ${confettiHtml}
+      <div class="celebrate-content">
+        <div class="celebrate-stars" style="animation-delay:.2s">${stars}</div>
+        <div class="celebrate-score">${correctCount}/${chapterCount}</div>
+        <div class="celebrate-label">答对题数</div>
+        <div class="celebrate-badge" style="background:${badgeColor};color:#fff">${badgeText}</div>
+        <div class="celebrate-msg">${msg}</div>
+        <div class="btn-row" style="max-width:320px;margin:0 auto">
+          <button class="btn-secondary" onclick="goHome()">返回首页</button>
+          <button class="btn-primary" onclick="retryQuest()">再来一次</button>
+        </div>
+      </div>
+    </div>
+  `;
+  showPanel('panel-result');
+}
+
+function retryQuest() {
+  currentChapter = 0; correctCount = 0;
+  startQuestIntro();
+}
+
+// ==================== 自定义创建 ====================
+function initCreator() {
+  customChapters = [];
+  document.getElementById('c-title').value = '';
+  document.getElementById('chapterEditors').innerHTML = '';
+  addChapter();
+}
+
+function addChapter() {
+  const idx = customChapters.length;
+  if (idx >= 5) { showToast('最多5关'); return; }
+  customChapters.push({title:'',story:'',question:'',choices:['','','',''],correct:0,explanation:'',image:'',video:'',mediaType:'image'});
+  renderChapterEditors();
+}
+
+function renderChapterEditors() {
+  const el = document.getElementById('chapterEditors');
+  const labels = ['A','B','C','D'];
+  el.innerHTML = customChapters.map((ch, i) => {
+    const hasImage = ch.image && ch.image.length > 0;
+    const hasVideo = ch.video && ch.video.length > 0;
+    return `
+    <div class="chapter-editor">
+      <div class="ch-num">第 ${i+1} 关</div>
+      <div class="form-group">
+        <label>关卡标题</label>
+        <input type="text" value="${ch.title}" placeholder="例：第一关：神秘入口" oninput="customChapters[${i}].title=this.value">
+      </div>
+      <div class="form-group">
+        <label>故事情节（让学生代入情境）</label>
+        <textarea placeholder="例：你走进了一片神秘的森林，前方出现了一个精灵…" oninput="customChapters[${i}].story=this.value">${ch.story}</textarea>
+      </div>
+      <div class="form-group">
+        <label>配图或视频（选填，让画面更生动）</label>
+        <div class="media-type-tabs">
+          <button class="media-type-tab ${ch.mediaType!=='video'?'active':''}" onclick="customChapters[${i}].mediaType='image';renderChapterEditors()">📷 图片</button>
+          <button class="media-type-tab ${ch.mediaType==='video'?'active':''}" onclick="customChapters[${i}].mediaType='video';renderChapterEditors()">🎬 视频</button>
+        </div>
+        ${ch.mediaType === 'video' ? `
+          <div class="upload-area">
+            <input type="file" accept="video/*" onchange="handleMediaUpload(${i}, this, 'video')">
+            <div class="upload-hint"><span class="upload-icon">🎬</span>点击上传视频<br>支持 MP4、WebM 等格式</div>
+          </div>
+          ${hasVideo ? `<div class="upload-preview"><video src="${ch.video}" controls style="width:100%;max-height:200px;border-radius:10px"></video><button class="remove-media" onclick="customChapters[${i}].video='';renderChapterEditors()">✕</button></div>` : ''}
+        ` : `
+          <div class="upload-area">
+            <input type="file" accept="image/*" onchange="handleMediaUpload(${i}, this, 'image')">
+            <div class="upload-hint"><span class="upload-icon">📷</span>点击上传图片<br>支持 JPG、PNG、GIF 等格式</div>
+          </div>
+          ${hasImage ? `<div class="upload-preview"><img src="${ch.image}" alt="配图预览"><button class="remove-media" onclick="customChapters[${i}].image='';renderChapterEditors()">✕</button></div>` : ''}
+        `}
+      </div>
+      <div class="form-group">
+        <label>题目</label>
+        <input type="text" value="${ch.question}" placeholder="例：精灵问：下面哪个是哺乳动物？" oninput="customChapters[${i}].question=this.value">
+      </div>
+      <div class="form-group">
+        <label>选项（点击左侧圆圈标记正确答案）</label>
+        ${ch.choices.map((c, j) => `
+          <div class="choice-row">
+            <div class="correct-mark ${ch.correct===j?'is-correct':''}" onclick="setCorrectAnswer(${i},${j})">${ch.correct===j?'✓':''}</div>
+            <input type="text" value="${c}" placeholder="${labels[j]}. 选项内容" oninput="customChapters[${i}].choices[${j}]=this.value">
+          </div>
+        `).join('')}
+      </div>
+      <div class="form-group">
+        <label>解析（答完后显示）</label>
+        <textarea placeholder="为什么这个答案是对的？" oninput="customChapters[${i}].explanation=this.value">${ch.explanation}</textarea>
+      </div>
+    </div>
+  `}).join('');
+  document.getElementById('nextChNum').textContent = customChapters.length + 1;
+}
+
+function handleMediaUpload(chapterIdx, inputEl, mediaType) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  const maxSize = mediaType === 'video' ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showToast(mediaType === 'video' ? '视频文件不能超过20MB' : '图片文件不能超过5MB');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    if (mediaType === 'video') { customChapters[chapterIdx].video = e.target.result; customChapters[chapterIdx].mediaType = 'video'; }
+    else { customChapters[chapterIdx].image = e.target.result; customChapters[chapterIdx].mediaType = 'image'; }
+    renderChapterEditors();
+    showToast('上传成功！', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function setCorrectAnswer(chIdx, choiceIdx) { customChapters[chIdx].correct = choiceIdx; renderChapterEditors(); }
+
+function createFromForm() {
+  const title = document.getElementById('c-title').value.trim();
+  if (!title) { showToast('请填写闯关主题名称'); return; }
+  const subject = document.getElementById('c-subject').value;
+  for (let i = 0; i < customChapters.length; i++) {
+    const ch = customChapters[i];
+    if (!ch.question) { showToast(`第${i+1}关还没写题目`); return; }
+    if (ch.choices.filter(c => c.trim()).length < 2) { showToast(`第${i+1}关至少需要2个选项`); return; }
+  }
+  currentQuest = {
+    id: 'custom_' + Date.now(), subject, name: title,
+    introText: `你即将踏上「${title}」的冒险旅程……`,
+    chapters: customChapters.map((ch, i) => ({
+      title: ch.title || `第${i+1}关`, story: ch.story || '', question: ch.question,
+      choices: ch.choices.filter(c => c.trim()), correct: ch.correct, explanation: ch.explanation || '',
+      image: ch.image || '', video: ch.video || ''
+    }))
+  };
+  currentChapter = 0; correctCount = 0; chapterCount = currentQuest.chapters.length;
+  // 自定义闯关也走入场动画
+  startQuestIntro();
+  showToast('闯关创建成功！', 'success');
+}
+
+// ==================== AI 生成 ====================
+function onEndpointChange() {
+  const sel = document.getElementById('ai-endpoint');
+  const tip = document.getElementById('api-tip');
+  if (sel.value.includes('deepseek')) {
+    tip.innerHTML = '<span style="color:#e17055">DeepSeek 免费额度已用完需充值，建议改用硅基流动（免费额度充足）。</span>';
+  } else if (sel.value.includes('siliconflow')) {
+    tip.innerHTML = '硅基流动注册即送2000万Tokens免费额度，够用很久。<a href="https://cloud.siliconflow.cn" target="_blank" style="color:#6c5ce7;text-decoration:underline">去注册</a> → 登录后到「API密钥」页面创建即可。';
+  } else {
+    tip.innerHTML = '请填入兼容OpenAI格式的API地址和密钥。';
+  }
+}
+
+async function aiGenerate() {
+  const subject = document.getElementById('ai-subject').value;
+  const topic = document.getElementById('ai-topic').value.trim();
+  const grade = document.getElementById('ai-grade').value;
+  const apiKey = document.getElementById('ai-key').value.trim();
+  const endpoint = document.getElementById('ai-endpoint').value;
+  if (!topic) { showToast('请输入知识点或主题'); return; }
+  const sub = SUBJECTS[subject] || SUBJECTS.custom;
+
+  if (!apiKey) {
+    const match = BUILTIN_THEMES.find(t => t.subject === subject);
+    if (match) {
+      currentQuest = match; currentChapter = 0; correctCount = 0; chapterCount = match.chapters.length;
+      openThemeHome(match.id); showToast('使用内置主题（未配置API密钥）', 'success'); return;
+    }
+    currentQuest = generateGenericQuest(topic, subject, grade);
+    currentChapter = 0; correctCount = 0; chapterCount = currentQuest.chapters.length;
+    startQuestIntro(); showToast('使用本地模板生成（未配置API密钥）', 'success'); return;
+  }
+
+  showToast('正在生成中…');
+  try {
+    const prompt = `你是一个专业的中学教师，请为${grade}${sub.name}学科设计一个"剧情闯关"教学活动，主题是"${topic}"。
+要求：
+1. 设计3关，每关有：关卡标题、故事情节（100字以内，有代入感）、一道选择题（4个选项）、正确答案索引（0-3）、解析
+2. 故事情节要连贯，像一个完整的冒险故事
+3. 题目要覆盖${topic}的核心知识点，难度适合${grade}
+4. 4个选项要有干扰性，不能一眼看出答案
+5. 解析要简洁有料
+请严格按以下JSON格式返回，不要返回其他内容：
+{"title":"闯关主题名称","intro":"一段50字以内的剧情引言","chapters":[{"title":"关卡标题","story":"故事情节","question":"题目","choices":["A","B","C","D"],"correct":0,"explanation":"解析"}]}`;
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: endpoint.includes('siliconflow') ? 'deepseek-ai/DeepSeek-V3' : 'deepseek-chat',
+        messages: [{ role: 'user', content: prompt }], temperature: 0.8, max_tokens: 2000
+      })
+    });
+    if (!resp.ok) { const errText = await resp.text().catch(() => ''); throw new Error(`API请求失败(${resp.status}): ${errText.substring(0,100)}`); }
+    const data = await resp.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI返回格式异常，请重试');
+    const questData = JSON.parse(jsonMatch[0]);
+    currentQuest = {
+      id: 'ai_' + Date.now(), subject, name: questData.title || `${topic}闯关`,
+      introText: questData.intro || `你即将踏上「${topic}」的冒险旅程……`,
+      chapters: questData.chapters.map(ch => ({...ch, image:'', video:''}))
+    };
+    currentChapter = 0; correctCount = 0; chapterCount = currentQuest.chapters.length;
+    startQuestIntro(); showToast('AI生成成功！', 'success');
+  } catch (e) { showToast('生成失败：' + e.message); }
+}
+
+function generateGenericQuest(topic, subjectId, grade) {
+  const sub = SUBJECTS[subjectId] || SUBJECTS.custom;
+  return {
+    id: 'gen_' + Date.now(), subject: subjectId,
+    name: `${sub.emoji} ${topic}闯关`,
+    introText: `你即将踏上「${topic}」的探险旅程……`,
+    chapters: [
+      {title:'第一关：初识',story:`你踏上了一段关于「${topic}」的探险旅程。前方出现了第一个挑战——请回答入门级问题，证明你有资格继续前进。`,question:`关于「${topic}」，以下哪个说法是正确的？`,choices:['只需要死记硬背就能掌握','需要理解核心概念并灵活运用','只靠做题就够了','和这个知识点无关的都不用看'],correct:1,explanation:`学习任何知识点，最重要的是理解核心概念和适用范围，然后在实际问题中灵活运用。`,image:'',video:''},
+      {title:'第二关：深入',story:`你通过了第一关，来到更深的区域。这里需要你对「${topic}」有更深入的理解，才能找到隐藏的线索。`,question:`深入理解「${topic}」的关键是什么？`,choices:['做大量重复练习','找到知识之间的联系和规律','只看教材就够了','记住所有细节'],correct:1,explanation:`知识点不是孤立的，找到它和其他知识的联系，形成知识网络，才能真正做到融会贯通。`,image:'',video:''},
+      {title:'第三关：应用',story:`最终的挑战来了！你必须将「${topic}」的知识应用到实际场景中，才能完成这次探险。`,question:`如何检验自己对「${topic}」的掌握程度？`,choices:['看考试分数就够了','能否用自己的话解释并应用到新情境','能否背诵定义','能否快速做完题目'],correct:1,explanation:`真正的掌握=能用自己话解释+能迁移到新情境。如果只能背定义但不会用，说明理解还停留在表面。`,image:'',video:''}
+    ]
+  };
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', () => { renderThemeScroll(); });
+
+// ===== 工具箱积分同步 =====
+window._tbStudent = null;
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.source !== 'toolbox2') return;
+  if (e.data.type === 'init' && e.data.data) {
+    window._tbStudent = e.data.data.selectedStudent || null;
+  }
+});
+</script>
+</body>
+</html>

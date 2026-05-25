@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>猜词达人</title>
+<style>
+:root{
+  --bg:#0b0819;--bg2:#13102b;--bg3:#1c1742;
+  --gold:#fbbf24;--gold2:#f59e0b;--pink:#f472b6;--pink2:#ec4899;
+  --purple:#a78bfa;--purple2:#7c3aed;--cyan:#22d3ee;--green:#34d399;
+  --red:#f87171;--red2:#ef4444;
+  --card:#16122c;--bdr:rgba(255,255,255,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:#fff;user-select:none;-webkit-user-select:none}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;outline:none;color:#fff}
+
+/* ===== Page System ===== */
+.page{display:none;position:absolute;inset:0;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+
+/* ===== HOME PAGE ===== */
+#page-home{
+  background:radial-gradient(ellipse 80% 80% at 20% 10%,rgba(168,85,247,.18),transparent 60%),
+             radial-gradient(ellipse 60% 60% at 80% 90%,rgba(236,72,153,.15),transparent 60%),
+             var(--bg);
+}
+.home-wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:30px 20px;gap:32px}
+
+/* Logo */
+.home-logo{width:90px;height:90px;border-radius:28px;
+  background:linear-gradient(135deg,#a78bfa,#ec4899,#f59e0b);
+  display:flex;align-items:center;justify-content:center;font-size:44px;
+  box-shadow:0 8px 40px rgba(168,85,247,.5),0 0 80px rgba(236,72,153,.25);
+  animation:logoFloat 3s ease-in-out infinite}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.home-title{font-size:clamp(36px,8vw,54px);font-weight:900;letter-spacing:3px;
+  background:linear-gradient(135deg,#c4b5fd,#f9a8d4,#fcd34d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+
+/* Mode Cards */
+.home-modes{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:600px;width:100%}
+.mode-card{flex:1;min-width:140px;max-width:190px;display:flex;flex-direction:column;align-items:center;
+  padding:20px 14px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1.5px solid var(--bdr);cursor:pointer;transition:all .35s;position:relative;overflow:hidden}
+.mode-card::after{content:'';position:absolute;inset:0;border-radius:20px;opacity:0;transition:opacity .35s}
+.mode-card:nth-child(1)::after{background:radial-gradient(circle at 50% 30%,rgba(168,85,247,.25),transparent 70%)}
+.mode-card:nth-child(2)::after{background:radial-gradient(circle at 50% 30%,rgba(236,72,153,.25),transparent 70%)}
+.mode-card:nth-child(3)::after{background:radial-gradient(circle at 50% 30%,rgba(34,211,238,.25),transparent 70%)}
+.mode-card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.2)}
+.mode-card:hover::after{opacity:1}
+.mode-card:active{transform:scale(.97)}
+.mc-icon{font-size:42px;margin-bottom:10px;position:relative;z-index:1}
+.mc-name{font-size:16px;font-weight:800;position:relative;z-index:1}
+
+.home-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.home-btn{padding:12px 24px;border-radius:14px;border:1.5px solid var(--bdr);background:rgba(255,255,255,.05);
+  font-size:14px;font-weight:600;transition:all .3s}
+.home-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+
+/* ===== SETUP PAGE ===== */
+#page-setup{background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.setup-scroll{flex:1;overflow-y:auto;padding:24px 20px}
+.setup-inner{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+
+.setup-top{display:flex;align-items:center;justify-content:center;position:relative}
+.setup-back{position:absolute;left:0;padding:10px 18px;border-radius:12px;border:1.5px solid var(--bdr);
+  background:rgba(255,255,255,.05);font-size:15px;font-weight:600;transition:all .3s}
+.setup-back:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.1)}
+.setup-h1{font-size:26px;font-weight:900;background:linear-gradient(135deg,#c4b5fd,#fcd34d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+.setup-block{background:rgba(255,255,255,.04);border-radius:18px;padding:20px;border:1px solid var(--bdr)}
+.setup-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+
+/* Subject Dropdown */
+.subj-dropdown{position:relative}
+.subj-selected{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:14px;
+  border:2px solid var(--bdr);background:rgba(255,255,255,.04);cursor:pointer;transition:all .3s}
+.subj-selected:hover{border-color:rgba(255,255,255,.2)}
+.subj-arrow{margin-left:auto;font-size:12px;color:rgba(255,255,255,.4);transition:.3s}
+.subj-dropdown.open .subj-arrow{transform:rotate(180deg)}
+.subj-list{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);
+  border:1.5px solid var(--bdr);border-radius:14px;max-height:200px;overflow-y:auto;z-index:10;
+  display:none;box-shadow:0 16px 40px rgba(0,0,0,.6)}
+.subj-dropdown.open .subj-list{display:block}
+.subj-option{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;transition:all .2s}
+.subj-option:hover{background:rgba(255,255,255,.08)}
+.subj-option.on{background:rgba(168,85,247,.2);color:#c4b5fd}
+
+/* Timer */
+.timer-row{display:flex;gap:10px;flex-wrap:wrap}
+.timer-opt{flex:1;min-width:70px;padding:14px 8px;border-radius:14px;border:2px solid var(--bdr);
+  background:rgba(255,255,255,.04);text-align:center;font-size:15px;font-weight:700;transition:all .3s}
+.timer-opt:hover{border-color:rgba(255,255,255,.2)}
+.timer-opt.on{border-color:var(--gold);background:rgba(251,191,36,.12);color:var(--gold)}
+.timer-custom{width:80px;text-align:center;padding:14px 8px;border-radius:14px;border:2px solid var(--bdr);
+  background:rgba(255,255,255,.04);font-size:15px;font-weight:700;transition:all .3s}
+.timer-custom:focus{border-color:var(--purple2);background:rgba(168,85,247,.1)}
+
+/* Deck Picker */
+.deck-picker{display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto}
+.deck-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:13px;
+  border:1.5px solid var(--bdr);cursor:pointer;transition:all .3s}
+.deck-row:hover{border-color:rgba(255,255,255,.15)}
+.deck-row.sel{border-color:var(--green);background:rgba(52,211,153,.1)}
+.deck-dot{width:20px;height:20px;border-radius:6px;border:2px solid var(--bdr);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .3s}
+.deck-row.sel .deck-dot{border-color:var(--green);background:var(--green);color:#000}
+.deck-info{flex:1}
+.deck-dname{font-weight:700;font-size:14px}
+.deck-dcnt{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+
+.setup-start{max-width:520px;margin:0 auto;width:calc(100% - 40px);padding:16px 24px 28px}
+.btn-start{width:100%;padding:18px;border-radius:16px;border:none;font-size:17px;font-weight:800;letter-spacing:2px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;
+  box-shadow:0 6px 30px rgba(124,58,237,.5);transition:all .3s}
+.btn-start:hover{transform:scale(1.02);box-shadow:0 8px 40px rgba(124,58,237,.6)}
+.btn-start:disabled{opacity:.3;transform:none;cursor:not-allowed}
+
+/* ===== GAME PAGE ===== */
+#page-game{background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(124,58,237,.15),transparent 70%),var(--bg2)}
+#page-draw{background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(124,58,237,.15),transparent 70%),var(--bg2)}
+.game-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 20px;gap:18px;position:relative;overflow-y:auto}
+
+/* Game Title Bar */
+.game-bar{display:flex;align-items:center;justify-content:center;position:relative;padding:14px 20px;
+  background:rgba(0,0,0,.25);border-bottom:1px solid var(--bdr)}
+.game-end{position:absolute;top:60px;right:14px;padding:12px 22px;border-radius:13px;border:1.5px solid rgba(248,113,113,.4);
+  background:rgba(248,113,113,.1);color:#fca5a5;font-size:15px;font-weight:700;transition:all .3s}
+.game-end:hover{background:rgba(248,113,113,.2);border-color:rgba(248,113,113,.6)}
+.game-title-sm{font-size:36px;font-weight:900;background:linear-gradient(90deg,#c4b5fd,#f9a8d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+
+/* Big Start Button */
+.start-big{padding:20px 80px;border-radius:20px;border:none;font-size:22px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;
+  box-shadow:0 8px 40px rgba(124,58,237,.6);transition:all .3s;animation:startPulse 2s ease-in-out infinite}
+.start-big:hover{transform:scale(1.05)}
+.start-big:active{transform:scale(.97)}
+@keyframes startPulse{0%,100%{box-shadow:0 8px 40px rgba(124,58,237,.6)}50%{box-shadow:0 8px 70px rgba(236,72,153,.7)}}
+
+/* Word Reveal */
+.word-box{width:min(480px,92vw);padding:50px 30px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.08));
+  border:2px solid var(--bdr);text-align:center;display:none;transition:all .5s;
+  animation:wordPop .5s cubic-bezier(.34,1.56,.64,1)}
+.word-box.show{display:block}
+@keyframes wordPop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.word-main{font-size:clamp(40px,11vw,64px);font-weight:900;letter-spacing:4px;
+  background:linear-gradient(135deg,#fcd34d,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.3}
+.word-sub{display:none}
+
+/* Huge Timer */
+.game-clock{font-size:96px;font-weight:900;line-height:1;min-width:180px;text-align:center;
+  color:var(--gold);transition:color .5s;display:none}
+.game-clock.show{display:block}
+.game-clock.warn{color:var(--red2);animation:clockBeat .5s ease infinite}
+@keyframes clockBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* Round info */
+.round-info{font-size:15px;color:rgba(255,255,255,.35);font-weight:600;display:none}
+.round-info.show{display:block}
+
+/* Game Controls */
+.game-ctrls{display:flex;gap:14px;padding:16px 20px;background:rgba(0,0,0,.25);border-top:1px solid var(--bdr)}
+.ctrl-btn{flex:1;padding:18px 16px;border-radius:16px;border:2px solid var(--bdr);
+  background:rgba(255,255,255,.04);font-size:16px;font-weight:800;transition:all .3s}
+.ctrl-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+.ctrl-skip{color:#fca5a5;border-color:rgba(248,113,113,.3)}
+.ctrl-skip:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.5)}
+.ctrl-wrong{color:#fdba74;border-color:rgba(251,146,60,.3)}
+.ctrl-wrong:hover{background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.5)}
+.ctrl-right{color:#6ee7b7;border-color:rgba(52,211,153,.3)}
+.ctrl-right:hover{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.5)}
+
+/* ===== DRAW MODE LAYOUT ===== */
+.draw-hint{text-align:center;padding:8px 20px 4px;font-size:13px;color:rgba(255,255,255,.5);line-height:1.7}
+.game-hint{text-align:center;padding:8px 20px 4px;font-size:15px;color:rgba(255,255,255,.55);line-height:1.7}
+.draw-layout{flex:1;display:flex;flex-direction:row;overflow:hidden;min-height:0}
+
+/* Left: canvas area */
+.draw-main-area{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.draw-status-bar{display:flex;align-items:center;gap:14px;padding:6px 16px;flex-shrink:0}
+.draw-status-bar .game-clock{font-size:32px;min-width:auto;display:block;color:var(--gold)}
+.draw-status-bar .game-clock.show{display:block}
+.draw-status-bar .round-info{font-size:13px;color:rgba(255,255,255,.35);display:block;margin:0}
+
+.draw-canvas-area{flex:1;position:relative;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.draw-canvas-area .canvas-wrap{position:absolute;inset:0;background:#fff;display:none}
+.draw-canvas-area .canvas-wrap.show{display:block}
+.draw-canvas-area .canvas-wrap canvas{display:block;width:100%;height:100%}
+
+/* Start button overlay */
+.draw-canvas-area .start-big{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10}
+
+/* Word overlay — absolutely positioned, never affects canvas size */
+.draw-canvas-area .draw-word-box{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;
+  padding:10px 24px!important;background:rgba(13,8,25,.92);backdrop-filter:blur(12px);
+  border-radius:16px;border:1.5px solid rgba(255,255,255,.15);display:none;width:auto!important;max-width:92%;animation:none}
+.draw-canvas-area .draw-word-box.show{display:block}
+.draw-canvas-area .draw-word-box .word-main{font-size:22px!important;white-space:nowrap}
+
+/* Right: tools panel */
+.draw-tools-panel{display:none;flex-direction:column;align-items:center;gap:8px;
+  padding:12px 8px;background:rgba(255,255,255,.03);border-left:1px solid var(--bdr);
+  flex-shrink:0;overflow-y:auto}
+.draw-tools-panel.show{display:flex}
+
+.dtool{width:44px;height:44px;border-radius:13px;border:1.5px solid var(--bdr);
+  background:rgba(255,255,255,.04);font-size:18px;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;color:#fff}
+.dtool:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.1)}
+.dtool.on{border-color:#fcd34d;background:rgba(251,191,36,.12);box-shadow:0 0 14px rgba(251,191,36,.15)}
+.dtool-div{width:24px;height:1px;background:var(--bdr);margin:4px 0;flex-shrink:0}
+.cover-toggle{font-size:12px;font-weight:700;white-space:nowrap;width:auto!important;padding:0 8px;margin-top:4px}
+.cover-toggle.active{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.15)!important;color:#22d3ee}
+
+/* ===== RESULT PAGE ===== */
+#page-result{background:radial-gradient(ellipse 60% 40% at 50% 30%,rgba(124,58,237,.2),transparent 70%),var(--bg)}
+.result-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;gap:30px}
+.result-badge{width:100px;height:100px;border-radius:28px;
+  background:linear-gradient(135deg,#fbbf24,#f59e0b);
+  display:flex;align-items:center;justify-content:center;font-size:48px;
+  box-shadow:0 8px 50px rgba(251,191,36,.5);animation:logoFloat 2s ease-in-out infinite}
+.result-h1{font-size:32px;font-weight:900}
+.result-stats{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.stat-box{padding:22px 28px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);text-align:center;min-width:120px}
+.stat-num{font-size:36px;font-weight:900;background:linear-gradient(135deg,#fcd34d,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.35);margin-top:6px}
+.result-btns{display:flex;gap:14px}
+.rbtn{padding:16px 36px;border-radius:16px;font-size:16px;font-weight:700;transition:all .3s}
+.rbtn-out{border:2px solid var(--bdr);background:rgba(255,255,255,.05);color:#fff}
+.rbtn-out:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+.rbtn-go{border:none;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;box-shadow:0 6px 30px rgba(124,58,237,.5)}
+.rbtn-go:hover{box-shadow:0 8px 40px rgba(124,58,237,.7);transform:scale(1.02)}
+
+/* ===== MODAL ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.on{display:flex}
+.modal{width:min(550px,95vw);max-height:85vh;background:var(--bg2);border-radius:22px;border:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid var(--bdr)}
+.modal-tt{font-size:20px;font-weight:800}
+.modal-x{width:40px;height:40px;border-radius:10px;border:1px solid var(--bdr);color:rgba(255,255,255,.5);font-size:20px;transition:.3s}
+.modal-x:hover{background:rgba(255,255,255,.1);color:#fff}
+.modal-bd{flex:1;overflow-y:auto;padding:20px}
+.modal-ft{padding:20px;border-top:1px solid var(--bdr);display:flex;gap:12px}
+.modal-tabs{display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:12px;margin-bottom:20px}
+.mtab{flex:1;padding:10px;border-radius:8px;text-align:center;font-size:14px;font-weight:600;color:rgba(255,255,255,.4);transition:.3s}
+.mtab.on{background:var(--purple2);color:#fff}
+
+.fgroup label{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:8px}
+.finp,.fsel{width:100%;padding:14px 16px;border-radius:14px;border:2px solid var(--bdr);background:rgba(255,255,255,.04);font-size:15px;transition:all .3s}
+.finp:focus,.fsel:focus{border-color:var(--purple2);background:rgba(255,255,255,.06)}
+.ftxt{min-height:160px;resize:vertical;line-height:1.8}
+.fhint{font-size:11px;color:rgba(255,255,255,.25);margin-top:6px}
+.dform{display:flex;flex-direction:column;gap:16px}
+
+.wlist{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}
+.witem{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--bdr)}
+.witem span{flex:1;font-size:14px;font-weight:600}
+.witem .wcnt{font-size:11px;color:rgba(255,255,255,.3)}
+.witem button{color:#f87171;font-size:16px;padding:4px 10px;border-radius:6px}
+
+/* ===== Toast ===== */
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 32px;border-radius:14px;
+  background:var(--bg2);border:1px solid var(--bdr);font-weight:600;opacity:0;transition:all .35s;z-index:200}
+.toast.up{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:var(--green);background:rgba(52,211,153,.15)}
+.toast.err{border-color:var(--red);background:rgba(248,113,113,.15)}
+
+@media(max-width:480px){
+  .home-modes{flex-direction:column;align-items:center}.mode-card{max-width:100%}
+  .start-big{padding:16px 50px;font-size:18px}
+  .game-clock{font-size:64px}
+  .word-main{font-size:36px}
+  .result-stats{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== HOME ==================== -->
+<div class="page active" id="page-home">
+  <div class="home-wrap">
+    <div class="home-logo">✨</div>
+    <div class="home-title">猜词达人</div>
+    <div class="home-modes">
+      <div class="mode-card" onclick="goSetup('say')">
+        <div class="mc-icon">💬</div><div class="mc-name">你说我猜</div>
+      </div>
+      <div class="mode-card" onclick="goSetup('act')">
+        <div class="mc-icon">🎭</div><div class="mc-name">你划我猜</div>
+      </div>
+      <div class="mode-card" onclick="goSetup('draw')">
+        <div class="mc-icon">🎨</div><div class="mc-name">你画我猜</div>
+      </div>
+    </div>
+    <div class="home-actions">
+      <button class="home-btn" onclick="openDeckManager()">📚 题库管理</button>
+      <button class="home-btn" onclick="showHistory()">📊 历史记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SETUP ==================== -->
+<div class="page" id="page-setup">
+  <div class="setup-scroll">
+    <div class="setup-inner">
+      <div class="setup-top">
+        <button class="setup-back" onclick="goHome()">← 返回</button>
+        <div class="setup-h1" id="setupTitle">游戏设置</div>
+      </div>
+
+      <div class="setup-block">
+        <div class="setup-label">📖 选择学科</div>
+        <div class="subj-dropdown" id="subjDropdown">
+          <div class="subj-selected" onclick="toggleSubjDropdown()">
+            <span>📚</span><span id="subjLabel">全部学科</span>
+            <span class="subj-arrow">▾</span>
+          </div>
+          <div class="subj-list" id="subjList"></div>
+        </div>
+      </div>
+
+      <div class="setup-block">
+        <div class="setup-label">⏱️ 时间限制</div>
+        <div class="timer-row" id="timerRow"></div>
+      </div>
+
+      <div class="setup-block">
+        <div class="setup-label">📝 选择题目（可多选）</div>
+        <div class="deck-picker" id="deckPicker"></div>
+      </div>
+    </div>
+  </div>
+  <div class="setup-start">
+    <button class="btn-start" id="startBtn" onclick="startGame()">🎮 开 始 游 戏</button>
+  </div>
+</div>
+
+<!-- ==================== GAME: SAY / ACT ==================== -->
+<div class="page" id="page-game">
+  <div class="game-bar">
+    <div class="game-title-sm" id="gameModeLabel">你说我猜</div>
+    <button class="game-end" onclick="confirmExit()">✕ 结束游戏</button>
+  </div>
+  <div class="game-hint" id="gameHint">💡 点击开始答题后，一个人根据词语描述，另一个人背对屏幕猜词</div>
+  <div class="game-body">
+    <button class="start-big" id="gameStartBtn" onclick="beginPlay()">▶ 开始答题</button>
+    <div class="game-clock" id="gameTimer">--</div>
+    <div class="round-info" id="roundInfo">第 1 / 10 题 · 语文</div>
+    <div class="word-box" id="wordBox">
+      <div class="word-main" id="wordText">词语</div>
+    </div>
+  </div>
+  <div class="game-ctrls">
+    <button class="ctrl-btn ctrl-skip" onclick="judge('skip')">⏭ 跳过</button>
+    <button class="ctrl-btn ctrl-wrong" onclick="judge('wrong')">✕ 答错</button>
+    <button class="ctrl-btn ctrl-right" onclick="judge('correct')">✓ 答对</button>
+  </div>
+</div>
+
+<!-- ==================== GAME: DRAW ==================== -->
+<div class="page" id="page-draw">
+  <div class="game-bar">
+    <div class="game-title-sm">你画我猜</div>
+    <button class="game-end" onclick="confirmExit()">✕ 结束游戏</button>
+  </div>
+  <div class="draw-hint" id="drawHint">💡 点击开始答题后根据词语进行绘画，不能写字；点击隐藏题目后另一个人看画猜词</div>
+  <div class="draw-layout">
+    <div class="draw-main-area">
+      <div class="draw-status-bar">
+        <div class="game-clock" id="drawTimer">--</div>
+        <div class="round-info" id="drawRoundInfo">第 1 / 10 题</div>
+      </div>
+      <div class="draw-canvas-area">
+        <button class="start-big" id="drawStartBtn" onclick="beginPlay()">▶ 开始答题</button>
+        <div class="word-box draw-word-box" id="drawWordBox">
+          <div class="word-main" id="drawWordText">词语</div>
+        </div>
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="drawCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="draw-tools-panel" id="drawToolsPanel">
+      <button class="dtool" id="toolEraser" onclick="setDrawTool('eraser')" title="橡皮擦">🧹</button>
+      <button class="dtool on" id="toolFine" onclick="setDrawTool('pen',4)" title="细笔">·</button>
+      <button class="dtool" id="toolMed" onclick="setDrawTool('pen',8)" title="中笔">◉</button>
+      <button class="dtool" id="toolThick" onclick="setDrawTool('pen',16)" title="粗笔">⬤</button>
+      <div class="dtool-div"></div>
+      <button class="dtool" onclick="clrCV()" title="清空画板">🗑️</button>
+      <div class="dtool-div"></div>
+      <button class="dtool cover-toggle" id="coverBtn" onclick="toggleCover()" title="遮蔽/显示题目">👁</button>
+    </div>
+  </div>
+  <div class="game-ctrls">
+    <button class="ctrl-btn ctrl-skip" onclick="judge('skip')">⏭ 跳过</button>
+    <button class="ctrl-btn ctrl-wrong" onclick="judge('wrong')">✕ 答错</button>
+    <button class="ctrl-btn ctrl-right" onclick="judge('correct')">✓ 答对</button>
+  </div>
+</div>
+
+<!-- ==================== RESULT ==================== -->
+<div class="page" id="page-result">
+  <div class="result-wrap">
+    <div class="result-badge">🏆</div>
+    <div class="result-h1">游戏结束!</div>
+    <div class="result-stats">
+      <div class="stat-box"><div class="stat-num" id="rsScore">0</div><div class="stat-lbl">总得分</div></div>
+      <div class="stat-box"><div class="stat-num" id="rsCorrect">0</div><div class="stat-lbl">答对题数</div></div>
+      <div class="stat-box"><div class="stat-num" id="rsRate">0%</div><div class="stat-lbl">正确率</div></div>
+    </div>
+    <div class="result-btns">
+      <button class="rbtn rbtn-out" onclick="goHome()">返回首页</button>
+      <button class="rbtn rbtn-go" onclick="playAgain()">再来一局</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DECK MANAGER MODAL ==================== -->
+<div class="modal-bg" id="deckModal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-tt">📚 题库管理</div><button class="modal-x" onclick="closeDeck()">✕</button></div>
+    <div style="padding:12px 20px 0">
+      <div class="modal-tabs" id="modalTabs">
+        <button class="mtab on" onclick="dtTab('list')">题库列表</button>
+        <button class="mtab" onclick="dtTab('create')">新建题库</button>
+      </div>
+    </div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFoot">
+      <button class="rbtn rbtn-out" onclick="closeDeck()" style="flex:1">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   猜词达人 v2 — 全面重新设计
+   ================================================================ */
+
+const SUBJECTS=[
+  {id:'chinese',name:'语文',icon:'📖'},
+  {id:'math',name:'数学',icon:'🔢'},
+  {id:'english',name:'英语',icon:'🇬🇧'},
+  {id:'physics',name:'物理',icon:'⚛️'},
+  {id:'chemistry',name:'化学',icon:'🧪'},
+  {id:'history',name:'历史',icon:'📜'},
+  {id:'geography',name:'地理',icon:'🌍'},
+  {id:'biology',name:'生物',icon:'🧬'},
+  {id:'politics',name:'道法',icon:'⚖️'},
+  {id:'art',name:'美术',icon:'🎨'},
+  {id:'music',name:'音乐',icon:'🎵'},
+  {id:'other',name:'其它',icon:'📚'},
+];
+
+const BUILTIN=[
+  {id:'b_chinese_idiom',name:'语文·成语',subj:'chinese',words:['画蛇添足','守株待兔','掩耳盗铃','亡羊补牢','刻舟求剑','自相矛盾','井底之蛙','杯弓蛇影','狐假虎威','画龙点睛','对牛弹琴','惊弓之鸟','叶公好龙','坐井观天','邯郸学步','滥竽充数','破釜沉舟','卧薪尝胆','纸上谈兵','四面楚歌','负荆请罪','完璧归赵','望梅止渴','指鹿为马','三顾茅庐','草船借箭','闻鸡起舞','悬梁刺股','凿壁偷光','胸有成竹']},
+  {id:'b_chinese_poetry',name:'语文·古诗意象',subj:'chinese',words:['明月','春风','落花','杨柳','孤帆','夕阳','长河','大漠','青山','绿水','白鹭','黄鹂','杜鹃','寒山','夜雨','渔火','孤烟','归雁','采菊','踏雪','望月','听雨','折柳','登高','临水','怀古','思乡','送别','边塞','田园']},
+  {id:'b_math_shape',name:'数学·图形',subj:'math',words:['等边三角形','直角三角形','等腰梯形','平行四边形','菱形','正方形','长方形','圆形','椭圆','扇形','正方体','长方体','圆柱','圆锥','球体','棱柱','棱锥','正多边形','半圆','圆环']},
+  {id:'b_math_concept',name:'数学·概念',subj:'math',words:['勾股定理','圆周率','绝对值','平方根','因式分解','一元二次','函数','平行线','三角形','圆心角','概率','方差','坐标系','斜率','截距','向量','极限','导数','椭圆','正弦']},
+  {id:'b_english_animal',name:'英语·动物',subj:'english',words:['elephant','tiger','lion','giraffe','penguin','dolphin','butterfly','rabbit','monkey','panda','kangaroo','eagle','shark','whale','octopus','parrot','crocodile','zebra','peacock','flamingo']},
+  {id:'b_english_everyday',name:'英语·日常',subj:'english',words:['school','teacher','student','homework','library','playground','hospital','supermarket','restaurant','airport','train','bicycle','umbrella','notebook','backpack','pencil','blackboard','computer','guitar','camera']},
+  {id:'b_geography_cn',name:'地理·中国地名',subj:'geography',words:['青藏高原','黄土高原','云贵高原','塔里木盆地','四川盆地','东北平原','华北平原','长江中下游平原','黄河','长江','泰山','华山','昆仑山','天山','秦岭','青海湖','鄱阳湖','洞庭湖','珠江三角洲','太湖']},
+  {id:'b_geography_world',name:'地理·世界',subj:'geography',words:['珠穆朗玛峰','亚马逊河','撒哈拉沙漠','死海','大堡礁','南极洲','格陵兰岛','马尔代夫','威尼斯','富士山','阿尔卑斯山','落基山脉','巴拿马运河','苏伊士运河','尼罗河','五大湖','百慕大','夏威夷','金字塔','埃菲尔铁塔']},
+  {id:'b_history_event',name:'历史·大事件',subj:'history',words:['辛亥革命','五四运动','新中国成立','改革开放','抗日战争','红军长征','西安事变','七七事变','鸦片战争','甲午战争','洋务运动','戊戌变法','北伐战争','渡江战役','土地改革','抗美援朝','三大改造','十一届三中全会','南昌起义','秋收起义']},
+  {id:'b_history_people',name:'历史·人物',subj:'history',words:['秦始皇','汉武帝','唐太宗','宋太祖','成吉思汗','康熙帝','孙中山','毛泽东','周恩来','邓小平','屈原','李白','杜甫','苏轼','鲁迅','蔡元培','李大钊','梁启超','林则徐','郑成功']},
+  {id:'b_chemistry',name:'化学·元素',subj:'chemistry',words:['氢','氦','锂','碳','氮','氧','钠','镁','铝','硅','磷','硫','钾','钙','铁','铜','锌','银','金','汞','铅','碘','氯','氟','氖','溴']},
+  {id:'b_biology',name:'生物·人体',subj:'biology',words:['心脏','肝脏','肺','肾脏','胃','小肠','大肠','大脑','小脑','脊髓','眼球','骨骼','肌肉','血管','神经','皮肤','细胞','染色体','DNA','白细胞']},
+  {id:'b_politics',name:'道法·概念',subj:'politics',words:['法律','宪法','公民','权利','义务','选举','民主','法治','公平','正义','诚信','友善','爱国','富强','和谐','自由','平等','公正','文明','敬业']},
+  {id:'b_art',name:'美术·流派',subj:'art',words:['印象派','抽象派','写实主义','浪漫主义','古典主义','文艺复兴','巴洛克','立体主义','超现实主义','波普艺术','极简主义','表现主义','未来主义','后印象派','达达主义','野兽派','象征主义','新古典主义','装饰艺术','洛可可']},
+  {id:'b_music',name:'音乐·乐器',subj:'music',words:['钢琴','小提琴','大提琴','吉他','二胡','琵琶','古筝','笛子','唢呐','架子鼓','萨克斯','长笛','小号','圆号','手风琴','电子琴','单簧管','双簧管','长号','萧']},
+  {id:'b_physics',name:'物理·概念',subj:'physics',words:['重力','摩擦力','浮力','压强','功率','速度','加速度','惯性','杠杆','滑轮','动能','势能','电磁波','光的折射','光的反射','电流','电压','电阻','磁场','电场']},
+  {id:'b_other_everyday',name:'其它·日常物品',subj:'other',words:['手机','电脑','冰箱','空调','洗衣机','自行车','汽车','飞机','火箭','卫星','望远镜','显微镜','眼镜','手表','雨伞','书包','口罩','水杯','遥控器','充电器']},
+  {id:'b_other_sport',name:'其它·运动',subj:'other',words:['篮球','足球','乒乓球','羽毛球','排球','游泳','跑步','跳远','跳高','举重','体操','击剑','滑雪','滑冰','跆拳道','拳击','射箭','高尔夫','保龄球','网球']},
+];
+
+// ---- State ----
+let D={decks:[],history:[]};
+let mode='', subj='all', timer=60, customTimer='', picked=[];
+let words=[],idx=0,score=0,right=0,total=0,tLeft=60,tid=null,running=false,_tbStudent=null;
+let cv,ctx,drawing=false,isEraser=false,bs=8,lx,ly,wordVisible=true,wordHideTimer=null;
+
+// ---- Init ----
+function ld(){
+  let r=localStorage.getItem('gwd_data');
+  if(r)try{D=JSON.parse(r)}catch(e){}
+  if(!D.decks)D.decks=[];if(!D.history)D.history=[];
+}
+function sv(){localStorage.setItem('gwd_data',JSON.stringify(D))}
+function allDecks(){return[...BUILTIN,...D.decks]}
+
+ld();
+// Toolbox integration
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.source !== 'toolbox2') return;
+  if (e.data.type === 'init') {
+    if (e.data.data && e.data.data.selectedStudent) _tbStudent = e.data.data.selectedStudent;
+  }
+});
+
+// ---- Nav ----
+function pg(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+}
+function goHome(){stopT();pg('home')}
+
+function goSetup(m){
+  mode=m;subj='all';timer=60;customTimer='';picked=[];
+  document.getElementById('setupTitle').textContent={say:'你说我猜',act:'你划我猜',draw:'你画我猜'}[m];
+  renderSubjDropdown();renderTimers();renderDeckPicker();
+  pg('setup');
+}
+
+// ---- Subject Dropdown ----
+function renderSubjDropdown(){
+  let list=document.getElementById('subjList');
+  let sels=document.getElementById('subjLabel');
+  list.innerHTML=`<div class="subj-option ${subj==='all'?'on':''}" onclick="setSubj('all')">📚 全部学科</div>`+
+    SUBJECTS.map(s=>`<div class="subj-option ${subj===s.id?'on':''}" onclick="setSubj('${s.id}')">${s.icon} ${s.name}</div>`).join('');
+  sels.textContent=subj==='all'?'全部学科':(SUBJECTS.find(s=>s.id===subj)?.icon+' '+SUBJECTS.find(s=>s.id===subj)?.name||'');
+}
+
+function toggleSubjDropdown(){
+  document.getElementById('subjDropdown').classList.toggle('open');
+}
+function setSubj(id){
+  subj=id;
+  document.getElementById('subjDropdown').classList.remove('open');
+  renderSubjDropdown();renderDeckPicker();
+}
+document.addEventListener('click',function(e){
+  let dd=document.getElementById('subjDropdown');
+  if(!dd.contains(e.target))dd.classList.remove('open');
+});
+
+// ---- Timer ----
+function renderTimers(){
+  let row=document.getElementById('timerRow');
+  let opts=[
+    {v:60,l:'1 分钟'},{v:120,l:'2 分钟'},{v:180,l:'3 分钟'},{v:300,l:'5 分钟'}
+  ];
+  let h='';
+  opts.forEach(o=>{
+    h+=`<button class="timer-opt ${timer===o.v?'on':''}" onclick="setTimer(${o.v})">${o.l}</button>`;
+  });
+  h+=`<input type="number" class="timer-custom" id="customTimerInput" placeholder="自定义(秒)" value="${customTimer}" onfocus="this.select()" oninput="onCustomTimer(this.value)">`;
+  row.innerHTML=h;
+}
+
+function setTimer(v){timer=v;customTimer='';renderTimers()}
+function onCustomTimer(val){
+  customTimer=val;
+  let n=parseInt(val);
+  if(n>0)timer=n;else timer=60;
+  renderTimers();
+}
+
+// ---- Deck Picker ----
+function renderDeckPicker(){
+  let el=document.getElementById('deckPicker');
+  let decks=allDecks().filter(d=>subj==='all'||d.subj===subj);
+  if(!decks.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:rgba(255,255,255,.3)">暂无题库，请先创建或切换学科</div>';
+    return;
+  }
+  el.innerHTML=decks.map(d=>`
+    <div class="deck-row ${picked.includes(d.id)?'sel':''}" onclick="toggleDeck('${d.id}')">
+      <div class="deck-dot">${picked.includes(d.id)?'✓':''}</div>
+      <div class="deck-info"><div class="deck-dname">${d.name}</div></div>
+      <div class="deck-dcnt">${d.words.length}词</div>
+    </div>
+  `).join('');
+}
+
+function toggleDeck(id){
+  let i=picked.indexOf(id);
+  if(i>=0) picked.splice(i,1); else picked.push(id);
+  renderDeckPicker();
+}
+
+// ---- Game ----
+function startGame(){
+  if(!picked.length){toast('请至少选择一个题库','err');return}
+  if(timer<5){toast('时间至少5秒','err');return}
+
+  let pool=[];
+  allDecks().forEach(d=>{if(picked.includes(d.id)) d.words.forEach(w=>pool.push({w,d:d.subj}))});
+  if(!pool.length){toast('题库为空','err');return}
+  pool=shuf(pool);
+  words=pool;idx=0;score=0;right=0;total=0;tLeft=timer;running=false;
+  stopT();
+
+  // Clean UI - hide all game elements
+  ['wordBox','drawWordBox','canvasWrap','drawToolsPanel','coverBtn','roundInfo','drawRoundInfo'].forEach(c=>{
+    let el=document.getElementById(c);if(el)el.classList.remove('show');
+  });
+  document.getElementById('gameTimer').classList.remove('warn','show');
+  document.getElementById('drawTimer').classList.remove('warn','show');
+  document.getElementById('gameTimer').textContent='--';
+  document.getElementById('drawTimer').textContent='--';
+
+  if(mode==='draw'){
+    document.getElementById('drawStartBtn').style.display='';
+    // Reset dot state
+    document.getElementById('canvasWrap').classList.remove('show');
+    document.getElementById('drawToolsPanel').classList.remove('show');
+    pg('draw');
+  }else{
+    document.getElementById('gameModeLabel').textContent={say:'你说我猜',act:'你划我猜'}[mode];
+    let gh=document.getElementById('gameHint');
+    if(gh)gh.textContent={say:'💡 点击开始答题后，一个人根据词语描述，另一个人背对屏幕猜词',act:'💡 点击开始答题后，一个人根据词语进行肢体比划，不能说话，另一个人背对屏幕猜词'}[mode];
+    document.getElementById('gameStartBtn').style.display='';
+    pg('game');
+  }
+}
+
+function beginPlay(){
+  document.getElementById(mode==='draw'?'drawStartBtn':'gameStartBtn').style.display='none';
+  if(mode==='draw'){let h=document.getElementById('drawHint');if(h)h.style.display='none';}
+  else{let h=document.getElementById('gameHint');if(h)h.style.display='none';}
+  score=0;right=0;total=0;idx=0;tLeft=timer;running=true;wordVisible=true;isEraser=false;bs=8;
+  showClock();
+  showRound();
+  showWord();
+  startT();
+  if(mode==='draw'){
+    showCanvas();showDrawTools();
+    setTimeout(initCV,200);
+    setTimeout(function(){clrCV();resetToolHighlight();},250);
+  }
+}
+
+function showClock(){
+  let el=document.getElementById(mode==='draw'?'drawTimer':'gameTimer');
+  el.textContent=fmtTime(tLeft);
+  el.classList.add('show');
+  el.classList.remove('warn');
+}
+function showRound(){
+  let el=document.getElementById(mode==='draw'?'drawRoundInfo':'roundInfo');
+  el.classList.add('show');
+  updateRound();
+}
+function showWord(){
+  let w=words[idx];
+  let box=document.getElementById(mode==='draw'?'drawWordBox':'wordBox');
+  let txt=document.getElementById(mode==='draw'?'drawWordText':'wordText');
+  txt.textContent=w.w;
+  box.classList.remove('show');
+  void box.offsetWidth;
+  box.classList.add('show');
+  wordVisible=true;
+  if(mode==='draw'){
+    let cb=document.getElementById('coverBtn');
+    cb.textContent='👁 遮蔽题目';cb.title='遮蔽题目';cb.classList.remove('active');
+    clearTimeout(wordHideTimer);
+    wordHideTimer=setTimeout(function(){
+      if(!wordVisible||!running)return;
+      document.getElementById('drawWordBox').classList.remove('show');
+      wordVisible=false;
+      let cb2=document.getElementById('coverBtn');
+      cb2.textContent='🔓 显示题目';cb2.classList.add('active');
+    },5000);
+  }
+}
+function showDrawTools(){
+  document.getElementById('drawToolsPanel').classList.add('show');
+}
+function showCanvas(){
+  document.getElementById('canvasWrap').classList.add('show');
+}
+
+function resetToolHighlight(){
+  document.querySelectorAll('#drawToolsPanel .dtool').forEach(b=>b.classList.remove('on'));
+  document.getElementById('toolMed').classList.add('on');
+}
+
+function toggleCover(){
+  let cb=document.getElementById('coverBtn');
+  let box=document.getElementById('drawWordBox');
+  clearTimeout(wordHideTimer);
+  wordVisible=!wordVisible;
+  if(wordVisible){
+    box.classList.add('show');
+    cb.textContent='👁 遮蔽题目';cb.title='遮蔽题目';cb.classList.remove('active');
+    wordHideTimer=setTimeout(function(){
+      if(!wordVisible||!running)return;
+      document.getElementById('drawWordBox').classList.remove('show');
+      wordVisible=false;
+      let cb2=document.getElementById('coverBtn');
+      cb2.textContent='🔓 显示题目';cb2.classList.add('active');
+    },5000);
+  }else{
+    box.classList.remove('show');
+    cb.textContent='🔓 显示题目';cb.title='显示题目';cb.classList.add('active');
+  }
+}
+
+function updateRound(){
+  let el=document.getElementById(mode==='draw'?'drawRoundInfo':'roundInfo');
+  el.textContent=`第 ${idx+1} / ${words.length} 题`;
+}
+
+function judge(t){
+  if(!running)return;
+  clearTimeout(wordHideTimer);
+  total++;
+  if(t==='correct'){score+=10;right++;if(_tbStudent&&window.parent&&window.parent!==window){window.parent.postMessage({source:'toolbox2',type:'addPoints',name:_tbStudent,delta:3},'*');}}
+  idx++;
+  if(idx>=words.length){
+    endGame();return;
+  }
+  if(mode==='draw'){clrCV();resetToolHighlight();wordVisible=true;}
+  showWord();
+  updateRound();
+}
+
+function startT(){
+  stopT();
+  tid=setInterval(()=>{
+    tLeft--;
+    let el=document.getElementById(mode==='draw'?'drawTimer':'gameTimer');
+    el.textContent=fmtTime(tLeft);
+    if(tLeft<=10)el.classList.add('warn');
+    if(tLeft<=0)endGame();
+  },1000);
+}
+function stopT(){if(tid){clearInterval(tid);tid=null}}
+function fmtTime(s){let m=Math.floor(s/60),sec=s%60;return m>0?`${m}:${String(sec).padStart(2,'0')}`:`${sec}`}
+
+function endGame(){
+  stopT();running=false;
+  let rate=total>0?Math.round(right/total*100):0;
+  document.getElementById('rsScore').textContent=score;
+  document.getElementById('rsCorrect').textContent=right+'/'+total;
+  document.getElementById('rsRate').textContent=rate+'%';
+  D.history.unshift({mode,score,correct:right,total,rate,time:new Date().toISOString()});
+  if(D.history.length>50)D.history.length=50;sv();
+  pg('result');
+}
+function confirmExit(){if(confirm('确定结束游戏？'))endGame()}
+function playAgain(){goSetup(mode)}
+
+// ---- Canvas ----
+function initCV(){
+  cv=document.getElementById('drawCanvas');
+  ctx=cv.getContext('2d');
+  resizeCV();
+  ctx.lineCap='round';ctx.lineJoin='round';
+  cv.addEventListener('mousedown',sd);cv.addEventListener('mousemove',dr);
+  cv.addEventListener('mouseup',ed);cv.addEventListener('mouseleave',ed);
+  cv.addEventListener('touchstart',ht);cv.addEventListener('touchmove',ht);
+  cv.addEventListener('touchend',ed);
+  window.addEventListener('resize',()=>resizeCV());
+}
+function resizeCV(){
+  if(!cv||!ctx)return;
+  let w=cv.clientWidth, h=cv.clientHeight;
+  if(w<1||h<1)return;
+  let dpr=window.devicePixelRatio||1;
+  cv.width=w*dpr; cv.height=h*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.lineCap='round';ctx.lineJoin='round';
+}
+
+function getCPos(e){
+  let r=cv.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+function sd(e){drawing=true;let p=getCPos(e);lx=p.x;ly=p.y}
+function dr(e){
+  if(!drawing)return;
+  let p=getCPos(e);
+  ctx.beginPath();
+  if(isEraser){
+    ctx.globalCompositeOperation='destination-out';
+    ctx.lineWidth=24;
+  }else{
+    ctx.globalCompositeOperation='source-over';
+    ctx.lineWidth=bs;
+    ctx.strokeStyle='#000';
+  }
+  ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();
+  lx=p.x;ly=p.y;
+}
+function ed(){drawing=false;ctx.globalCompositeOperation='source-over'}
+function ht(e){
+  e.preventDefault();
+  let t=e.touches[0];
+  cv.dispatchEvent(new MouseEvent(e.type==='touchstart'?'mousedown':'mousemove',{clientX:t.clientX,clientY:t.clientY}));
+}
+function setDrawTool(type,size){
+  document.querySelectorAll('#drawToolsPanel .dtool').forEach(b=>b.classList.remove('on'));
+  if(type==='eraser'){
+    isEraser=true;
+    document.getElementById('toolEraser').classList.add('on');
+  }else{
+    isEraser=false;bs=size;
+    let id=size===4?'toolFine':size===16?'toolThick':'toolMed';
+    document.getElementById(id).classList.add('on');
+  }
+}
+function clrCV(){
+  if(!ctx||!cv)return;
+  ctx.globalCompositeOperation='source-over';
+  ctx.clearRect(0,0,cv.width,cv.height);
+}
+
+// ---- Deck Manager Modal ----
+let dtab='list',editing=null;
+
+function openDeckManager(){
+  dtab='list';editing=null;renderDM();
+  document.getElementById('deckModal').classList.add('on');
+}
+function closeDeck(){
+  document.getElementById('deckModal').classList.remove('on');editing=null;
+}
+function dtTab(t){
+  dtab=t;editing=null;
+  document.querySelectorAll('#modalTabs .mtab').forEach((b,i)=>b.classList.toggle('on',(t==='list'&&i===0)||(t==='create'&&i===1)));
+  renderDM();
+}
+function renderDM(){
+  let bd=document.getElementById('modalBody'),ft=document.getElementById('modalFoot');
+  if(dtab==='list'){
+    let decks=allDecks();
+    bd.innerHTML=`<div class="wlist">${decks.map(d=>`
+      <div class="witem">
+        <span>${d.name}</span><span class="wcnt">${d.words.length}词 ${d.id&&d.id.startsWith('b_')?'· 内置':''}</span>
+        ${d.id&&!d.id.startsWith('b_')?`<button onclick="editDeck('${d.id}')">✏️</button><button onclick="delDeck('${d.id}')">🗑️</button>`:''}
+      </div>
+    `).join('')}</div>`;
+    ft.innerHTML=`<button class="rbtn rbtn-out" onclick="closeDeck()" style="flex:1">关闭</button>`;
+  }else{
+    let d=editing?D.decks.find(x=>x.id===editing):null;
+    bd.innerHTML=`
+      <div class="dform">
+        <div class="fgroup"><label>题库名称</label><input class="finp" id="dName" placeholder="如：第五单元词汇" value="${d?d.name:''}"></div>
+        <div class="fgroup"><label>所属学科</label><select class="fsel" id="dSubj">${SUBJECTS.map(s=>`<option value="${s.id}" ${d&&d.subj===s.id?'selected':''}>${s.icon} ${s.name}</option>`).join('')}</select></div>
+        <div class="fgroup"><label>词语列表（每行一个）</label><textarea class="finp ftxt" id="dWords" placeholder="苹果&#10;香蕉&#10;橙子&#10;...">${d?d.words.join('\n'):''}</textarea><div class="fhint">每行一个词语，建议 10~50 个</div></div>
+      </div>`;
+    ft.innerHTML=`
+      <button class="rbtn rbtn-out" onclick="closeDeck()" style="flex:1">取消</button>
+      <button class="rbtn rbtn-go" onclick="saveDeck()" style="flex:1">${editing?'保存修改':'创建题库'}</button>`;
+  }
+}
+function editDeck(id){
+  editing=id;dtab='create';
+  document.querySelectorAll('#modalTabs .mtab').forEach((b,i)=>b.classList.toggle('on',i===1));
+  renderDM();
+}
+function delDeck(id){
+  if(!confirm('删除该题库？'))return;
+  D.decks=D.decks.filter(d=>d.id!==id);sv();
+  toast('已删除','ok');
+  renderDM();
+}
+function saveDeck(){
+  let name=document.getElementById('dName').value.trim();
+  let subj=document.getElementById('dSubj').value;
+  let raw=document.getElementById('dWords').value.trim();
+  let ws=raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(!name){toast('请输入名称','err');return}
+  if(!ws.length){toast('请至少输入一个词语','err');return}
+  if(editing){
+    let d=D.decks.find(x=>x.id===editing);
+    if(d){d.name=name;d.subj=subj;d.words=ws;}
+    toast('题库已更新','ok');
+  }else{
+    D.decks.push({id:'c_'+Date.now(),name,subj,words:ws});
+    toast('题库创建成功！','ok');
+  }
+  sv();editing=null;dtab='list';
+  document.querySelectorAll('#modalTabs .mtab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  renderDM();
+}
+
+// ---- History ----
+function showHistory(){
+  if(!D.history.length){toast('暂无记录','err');return}
+  let mn={say:'你说我猜',act:'你划我猜',draw:'你画我猜'};
+  alert('📊 最近游戏记录\n\n'+D.history.slice(0,10).map((h,i)=>`${i+1}. ${mn[h.mode]} · ${h.score}分 · ${h.correct}/${h.total}正确`).join('\n'));
+}
+
+// ---- Utils ----
+function shuf(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function toast(m,t){
+  let el=document.getElementById('toast');
+  el.textContent=m;el.className='toast up'+(t?' '+t:'');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('up'),2000);
+}
+
+// ---- Start ----
+renderSubjDropdown();renderTimers();renderDeckPicker();
+</script>
+</body>
+</html>

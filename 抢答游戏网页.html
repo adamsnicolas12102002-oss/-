@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课堂抢答大作战</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --blue: #3b82f6;
+    --blue-dark: #1d4ed8;
+    --blue-glow: #60a5fa;
+    --red: #ef4444;
+    --red-dark: #b91c1c;
+    --red-glow: #f87171;
+    --gold: #f59e0b;
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+  }
+  
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+  
+  /* 禁止右键菜单 */
+  body { -webkit-touch-callout: none; }
+  
+  /* ====== MAIN PAGE ====== */
+  #mainPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  }
+  
+  .main-title {
+    font-size: 56px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--blue-glow), var(--red-glow), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+    letter-spacing: 4px;
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+  @keyframes titlePulse {
+    0%, 100% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.2); transform: scale(1.02); }
+  }
+  
+  .main-subtitle { font-size: 18px; color: var(--text-dim); margin-bottom: 40px; text-align: center; line-height: 1.8; }
+  
+  .main-btn-group { display: flex; gap: 20px; margin-bottom: 30px; }
+  
+  .btn {
+    padding: 14px 36px; border: none; border-radius: 12px;
+    font-size: 20px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+    color: white; box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 30px rgba(59,130,246,0.6); }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: white; box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+  }
+  .btn-gold:hover { box-shadow: 0 6px 30px rgba(245,158,11,0.6); }
+  .btn-danger {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: white; box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+  }
+  .btn-small { padding: 8px 18px; font-size: 14px; border-radius: 8px; }
+  
+  .instructions {
+    background: var(--bg-card); border-radius: 16px;
+    padding: 24px 32px; max-width: 600px; width: 100%;
+    margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .instructions h3 { color: var(--gold); margin-bottom: 12px; font-size: 20px; }
+  .instructions p { color: var(--text-dim); line-height: 2; font-size: 15px; }
+  
+  /* ====== QUESTION MANAGER ====== */
+  #questionManager {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+    z-index: 1000; padding: 30px; overflow-y: auto;
+  }
+  .qm-container {
+    max-width: 800px; margin: 0 auto; background: var(--bg-card);
+    border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .qm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .qm-header h2 { font-size: 24px; color: var(--gold); }
+  
+  /* Pack selector */
+  .pack-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .pack-bar label { color: var(--text-dim); font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .pack-bar select {
+    flex: 1; min-width: 140px; background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 8px 12px; color: var(--gold); font-size: 15px;
+    font-weight: 700; font-family: inherit;
+  }
+  .pack-bar select:focus { outline: none; border-color: var(--gold); }
+  .pack-add-input {
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; padding: 8px 12px; color: white;
+    font-size: 14px; font-family: inherit; width: 120px;
+  }
+  .pack-add-input:focus { outline: none; border-color: var(--blue); }
+  .pack-btn {
+    padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; background: rgba(255,255,255,0.08);
+    color: var(--text-dim); font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .pack-btn:hover { background: rgba(59,130,246,0.2); border-color: var(--blue); color: var(--blue-glow); }
+  .pack-btn.del:hover { background: rgba(239,68,68,0.2); border-color: var(--red); color: var(--red-glow); }
+  
+  .qm-tabs {
+    display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px;
+    overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .qm-tab {
+    flex: 1; padding: 10px 16px; background: rgba(255,255,255,0.05);
+    color: var(--text-dim); border: none; font-size: 15px;
+    font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .qm-tab.active { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color: white; }
+  .qm-tab:hover:not(.active) { background: rgba(255,255,255,0.1); }
+  .qm-panel { display: none; }
+  .qm-panel.active { display: block; }
+  
+  .question-card {
+    background: rgba(255,255,255,0.05); border-radius: 12px;
+    padding: 16px; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.08); position: relative;
+  }
+  .question-card .q-num { color: var(--gold); font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .question-card input, .question-card textarea {
+    width: 100%; background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 10px 14px; color: white; font-size: 15px;
+    font-family: inherit; margin-bottom: 8px;
+  }
+  .question-card input:focus, .question-card textarea:focus { outline: none; border-color: var(--blue); }
+  .q-textarea { resize: vertical; min-height: 50px; }
+  
+  .option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .option-row .opt-label {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .opt-a { background: #22c55e; color: white; }
+  .opt-b { background: #3b82f6; color: white; }
+  .opt-c { background: #f59e0b; color: white; }
+  .opt-d { background: #ef4444; color: white; }
+  .option-row input { flex: 1; }
+  
+  .answer-select { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .answer-select label { color: var(--text-dim); font-size: 14px; }
+  .answer-select select {
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; padding: 6px 12px; color: var(--gold);
+    font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  .answer-select select:focus { outline: none; border-color: var(--gold); }
+  
+  .delete-q {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(239,68,68,0.2); border: none; color: var(--red);
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .delete-q:hover { background: rgba(239,68,68,0.4); }
+  
+  .add-question-btn {
+    width: 100%; padding: 12px; border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 12px; background: transparent; color: var(--text-dim);
+    font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: all 0.2s; margin-bottom: 16px;
+  }
+  .add-question-btn:hover { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.05); }
+  
+  .clear-all-btn {
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px; padding: 6px 14px; color: var(--red-glow);
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .clear-all-btn:hover { background: rgba(239,68,68,0.25); }
+  
+  /* Import */
+  .import-area textarea {
+    width: 100%; height: 150px; background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 12px; color: white; font-size: 13px; font-family: monospace; resize: vertical;
+  }
+  .import-area textarea:focus { outline: none; border-color: var(--blue); }
+  .import-hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.6; }
+  
+  /* ====== GAME PAGE ====== */
+  #gamePage {
+    display: none; height: 100vh; width: 100vw; flex-direction: column;
+    background: linear-gradient(180deg, #0f172a 0%, #1a1a3e 40%, #2d1b4e 100%);
+    position: relative; overflow: hidden;
+  }
+  
+  /* Game Title Bar */
+  .game-title-bar {
+    text-align: center; font-size: 28px; font-weight: 900;
+    background: linear-gradient(90deg, var(--blue-glow), var(--gold), var(--red-glow));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: 6px; padding: 6px 0 2px;
+    position: relative; z-index: 10;
+    text-shadow: none;
+  }
+
+  /* Health Bars - left-right spread with moderate padding */
+  .health-bar-container {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 100px; position: relative; z-index: 10;
+  }
+  .health-section { display: flex; align-items: center; gap: 10px; }
+  .health-section.right { flex-direction: row-reverse; }
+  
+  .player-name { font-size: 20px; font-weight: 900; white-space: nowrap; }
+  .player-name.blue { color: var(--blue-glow); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+  .player-name.red { color: var(--red-glow); text-shadow: 0 0 10px rgba(239,68,68,0.5); }
+  
+  .score-display { font-size: 28px; font-weight: 900; min-width: 30px; text-align: center; }
+  .score-display.blue { color: var(--blue-glow); }
+  .score-display.red { color: var(--red-glow); }
+  
+  .hp-bar-wrapper {
+    width: 220px; height: 26px; background: rgba(0,0,0,0.5);
+    border-radius: 13px; overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.15); position: relative;
+  }
+  .hp-bar {
+    height: 100%; border-radius: 11px;
+    transition: width 0.8s ease-out; position: relative;
+  }
+  .hp-bar.blue { background: linear-gradient(90deg, var(--blue), var(--blue-glow)); }
+  .hp-bar.red { background: linear-gradient(90deg, var(--red-glow), var(--red)); }
+  .hp-bar::after {
+    content: ''; position: absolute; top: 2px; left: 4px; right: 4px; height: 7px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent); border-radius: 6px;
+  }
+  .hp-bar.low { background: linear-gradient(90deg, #ef4444, #f87171) !important; }
+  .hp-text {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.8); z-index: 1;
+  }
+  .vs-badge {
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: white; font-weight: 900; font-size: 16px;
+    padding: 6px 14px; border-radius: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 10px rgba(245,158,11,0.4);
+  }
+  
+  /* Characters - left-right with moderate gap */
+  .characters-area {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 0 120px; height: 190px; position: relative; z-index: 10;
+  }
+  .character { width: 120px; height: 185px; position: relative; transition: transform 0.3s; }
+  .character.attack-left { animation: attackLeft 0.6s ease-in-out; }
+  .character.attack-right { animation: attackRight 0.6s ease-in-out; }
+  .character.hit { animation: hitShake 0.5s ease-in-out; }
+  .character.victory { animation: victoryBounce 0.8s ease-in-out infinite; }
+  .character.defeat { animation: defeatFall 0.8s ease-in forwards; }
+  
+  @keyframes attackLeft {
+    0% { transform: translateX(0); }
+    30% { transform: translateX(50px) scale(1.08); }
+    60% { transform: translateX(50px) scale(1.08); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes attackRight {
+    0% { transform: translateX(0); }
+    30% { transform: translateX(-50px) scale(1.08); }
+    60% { transform: translateX(-50px) scale(1.08); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes hitShake {
+    0%, 100% { transform: translateX(0); filter: brightness(1); }
+    15% { transform: translateX(-8px); filter: brightness(2.5); }
+    30% { transform: translateX(8px); filter: brightness(1.8); }
+    45% { transform: translateX(-6px); filter: brightness(2); }
+    60% { transform: translateX(6px); filter: brightness(1.5); }
+    75% { transform: translateX(-3px); filter: brightness(1); }
+  }
+  @keyframes victoryBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-15px) scale(1.05); }
+  }
+  @keyframes defeatFall {
+    0% { transform: rotate(0) translateY(0); opacity: 1; }
+    60% { transform: rotate(20deg) translateY(10px); opacity: 0.6; }
+    100% { transform: rotate(35deg) translateY(25px); opacity: 0.3; }
+  }
+  
+  .char-svg { width: 120px; height: 185px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+  
+  /* Question Area */
+  .question-area {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 0 40px 0; position: relative; z-index: 10;
+    flex: 1; min-height: 0; margin-top: -10px;
+  }
+  .question-text {
+    font-size: 24px; font-weight: 700; text-align: center;
+    margin-bottom: 16px; line-height: 1.5; max-width: 750px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .options-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; max-width: 700px; width: 100%;
+  }
+  .option-btn {
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px; padding: 14px 18px; color: white;
+    font-size: 20px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; font-family: inherit; text-align: left;
+    display: flex; align-items: center; gap: 10px; min-height: 58px;
+  }
+  .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+  .option-btn .opt-circle {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; flex-shrink: 0;
+  }
+  .option-btn:nth-child(1) .opt-circle { background: #22c55e; }
+  .option-btn:nth-child(2) .opt-circle { background: #3b82f6; }
+  .option-btn:nth-child(3) .opt-circle { background: #f59e0b; }
+  .option-btn:nth-child(4) .opt-circle { background: #ef4444; }
+  .option-btn.selected { background: rgba(59,130,246,0.25); border-color: var(--blue); box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+  .option-btn.correct { background: rgba(34,197,94,0.3); border-color: #22c55e; box-shadow: 0 0 15px rgba(34,197,94,0.3); }
+  .option-btn.wrong { background: rgba(239,68,68,0.3); border-color: #ef4444; box-shadow: 0 0 15px rgba(239,68,68,0.3); }
+  .option-btn:disabled { cursor: default; transform: none; }
+  
+  /* Bottom: Buzz + Submit + Exit */
+  .bottom-area {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 100px 16px; position: relative; z-index: 10;
+  }
+  .buzz-btn {
+    width: 150px; height: 64px; border: none; border-radius: 14px;
+    font-size: 24px; font-weight: 900; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .buzz-btn:active:not(:disabled) { transform: scale(0.92); }
+  .buzz-btn.blue-buzz {
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+    color: white; box-shadow: 0 4px 20px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .buzz-btn.red-buzz {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: white; box-shadow: 0 4px 20px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .buzz-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  
+  .center-btns { display: flex; gap: 10px; align-items: center; }
+  .submit-btn {
+    padding: 12px 36px; border: none; border-radius: 12px;
+    font-size: 20px; font-weight: 700; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: white; box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+    display: none;
+  }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .exit-btn {
+    padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; background: rgba(255,255,255,0.08);
+    color: var(--text-dim); font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .exit-btn:hover { background: rgba(239,68,68,0.2); border-color: var(--red); color: var(--red-glow); }
+  
+  /* 异常恢复按钮 */
+  .recover-btn {
+    padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px; background: rgba(245,158,11,0.15);
+    color: var(--gold); font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+    display: none;
+  }
+  .recover-btn:hover { background: rgba(245,158,11,0.3); border-color: var(--gold); }
+  
+  /* Countdown Overlay */
+  .countdown-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); display: none;
+    align-items: center; justify-content: center; z-index: 100;
+  }
+  .countdown-number {
+    font-size: 200px; font-weight: 900;
+    animation: countdownPop 0.8s ease-out; text-shadow: 0 0 60px currentColor;
+  }
+  .countdown-number.c3 { color: var(--red); }
+  .countdown-number.c2 { color: var(--gold); }
+  .countdown-number.c1 { color: #22c55e; }
+  .countdown-number.go { color: var(--blue-glow); font-size: 160px; }
+  @keyframes countdownPop {
+    0% { transform: scale(2); opacity: 0; }
+    50% { transform: scale(0.9); opacity: 1; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  /* Result Overlay */
+  .result-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none;
+    align-items: center; justify-content: center; flex-direction: column; z-index: 200;
+  }
+  .result-text { font-size: 64px; font-weight: 900; margin-bottom: 20px; animation: resultPop 0.6s ease-out; }
+  .result-text.win { color: var(--gold); text-shadow: 0 0 40px rgba(245,158,11,0.6); }
+  @keyframes resultPop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+  .result-sub { font-size: 24px; color: var(--text-dim); margin-bottom: 30px; }
+  
+  /* Answer indicator */
+  .answer-indicator {
+    position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 48px; font-weight: 900; z-index: 150; display: none;
+    animation: indicatorPop 0.5s ease-out; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .answer-indicator.correct { color: #22c55e; }
+  .answer-indicator.wrong { color: var(--red); }
+  @keyframes indicatorPop {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.3); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  
+  .correct-answer-display {
+    background: rgba(34,197,94,0.2); border: 2px solid #22c55e;
+    border-radius: 12px; padding: 8px 20px; font-size: 18px;
+    font-weight: 700; color: #22c55e; z-index: 50; display: none;
+    margin-top: 10px; text-align: center;
+  }
+  
+  .waiting-text { font-size: 22px; color: var(--text-dim); z-index: 11; display: none; text-align: center; padding: 10px; }
+  
+  .sparkle { position: fixed; border-radius: 50%; pointer-events: none; z-index: 250; }
+  @keyframes sparkleFly { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+  
+  /* Name input overlay */
+  .name-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none;
+    align-items: center; justify-content: center; z-index: 500;
+  }
+  .name-container {
+    background: var(--bg-card); border-radius: 20px; padding: 40px;
+    text-align: center; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .name-container h2 { font-size: 28px; margin-bottom: 24px; color: var(--gold); }
+  .name-inputs { display: flex; gap: 24px; margin-bottom: 24px; }
+  .name-field { display: flex; flex-direction: column; gap: 8px; }
+  .name-field label { font-size: 16px; font-weight: 700; }
+  .name-field label.blue { color: var(--blue-glow); }
+  .name-field label.red { color: var(--red-glow); }
+  .name-field input {
+    background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 10px 16px; color: white;
+    font-size: 18px; font-family: inherit; width: 180px; text-align: center;
+  }
+  .name-field input:focus { outline: none; border-color: var(--gold); }
+  
+  /* Pack select in name overlay */
+  .pack-select-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    justify-content: center;
+  }
+  .pack-select-row label { color: var(--text-dim); font-size: 15px; font-weight: 700; }
+  .pack-select-row select {
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; padding: 8px 14px; color: var(--gold);
+    font-size: 16px; font-weight: 700; font-family: inherit;
+  }
+  .pack-select-row select:focus { outline: none; border-color: var(--gold); }
+  
+  .bg-particle { position: fixed; border-radius: 50%; pointer-events: none; opacity: 0.12; z-index: 1; }
+  @keyframes screenShake {
+    0%, 100% { transform: translate(0); } 20% { transform: translate(-4px, 2px); }
+    40% { transform: translate(4px, -2px); } 60% { transform: translate(-2px, 4px); }
+    80% { transform: translate(2px, -4px); }
+  }
+  @keyframes floatParticle {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-20px) translateX(10px); }
+    50% { transform: translateY(-10px) translateX(-10px); }
+    75% { transform: translateY(-30px) translateX(5px); }
+  }
+  @keyframes trailFade { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(0.2); opacity: 0; } }
+  @keyframes impactBurst { 0% { transform: scale(0.3); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.7; } 100% { transform: scale(2.2); opacity: 0; } }
+</style>
+</head>
+<body>
+
+<!-- ====== MAIN PAGE ====== -->
+<div id="mainPage">
+  <div class="main-title">课堂抢答大作战</div>
+  <div class="main-subtitle">双人对战 · 抢答PK · 谁是答题王</div>
+  <div class="instructions">
+    <h3>游戏规则</h3>
+    <p>
+      两位选手分别点击左右两侧的"抢答"按钮争夺答题权<br>
+      抢到后选择答案并提交，答对对方扣20%血量，答错自己扣20%血量<br>
+      先答对5题获胜；一方血量归零立即判负<br>
+      题目按"题包"分组，可设置不同学科/章节的题目
+    </p>
+  </div>
+  <div class="main-btn-group">
+    <button class="btn btn-primary" onclick="startGame()">开始对战</button>
+    <button class="btn btn-gold" onclick="openQuestionManager()">题目管理</button>
+  </div>
+  <div id="questionCount" style="color: var(--text-dim); font-size: 16px;"></div>
+</div>
+
+<!-- ====== QUESTION MANAGER ====== -->
+<div id="questionManager">
+  <div class="qm-container">
+    <div class="qm-header">
+      <h2>题目管理</h2>
+      <button class="btn btn-small btn-danger" onclick="closeQuestionManager()">关闭</button>
+    </div>
+    
+    <!-- Pack selector bar -->
+    <div class="pack-bar">
+      <label>当前题包：</label>
+      <select id="packSelect" onchange="switchPack()"></select>
+      <input class="pack-add-input" id="newPackName" placeholder="新题包名称">
+      <button class="pack-btn" onclick="addPack()">新建题包</button>
+      <button class="pack-btn del" onclick="deletePack()">删除题包</button>
+    </div>
+    <div id="packInfo" style="color:var(--text-dim);font-size:13px;margin-bottom:14px"></div>
+    
+    <div class="qm-tabs">
+      <button class="qm-tab active" onclick="switchTab('edit')">逐题编辑</button>
+      <button class="qm-tab" onclick="switchTab('import')">批量导入</button>
+    </div>
+    
+    <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:8px 14px;margin-bottom:12px;color:var(--gold);font-size:14px;font-weight:700;text-align:center">
+      每局需要9道题，请至少录入9道选择题（支持9的倍数，可连续多局对战）
+    </div>
+    
+    <div class="qm-panel active" id="editPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span id="qCountLabel" style="color:var(--text-dim);font-size:14px"></span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-small btn-gold" onclick="loadSampleQuestions()">加载示例</button>
+          <button class="clear-all-btn" onclick="clearAllQuestions()">清空当前题包</button>
+        </div>
+      </div>
+      <button class="add-question-btn" onclick="addQuestion()">+ 添加题目</button>
+      <div id="questionList"></div>
+    </div>
+    
+    <div class="qm-panel" id="importPanel">
+      <div class="import-area">
+        <textarea id="importText" rows="8" placeholder="每行一道题，格式：&#10;题目|选项A|选项B|选项C|选项D|正确答案(ABCD)&#10;例如：&#10;中国的首都是哪里？|北京|上海|广州|深圳|A"></textarea>
+        <div class="import-hint">格式：题目|选项A|选项B|选项C|选项D|正确答案(A/B/C/D)，每行一题</div>
+        <button class="btn btn-small btn-gold" style="margin-top:12px" onclick="importQuestions()">导入到当前题包</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== NAME INPUT OVERLAY ====== -->
+<div class="name-overlay" id="nameOverlay">
+  <div class="name-container">
+    <h2>选手入场</h2>
+    <div class="pack-select-row">
+      <label>选择题包：</label>
+      <select id="gamePackSelect"></select>
+    </div>
+    <div class="name-inputs">
+      <div class="name-field">
+        <label class="blue">蓝方选手</label>
+        <input type="text" id="blueName" value="蓝方" maxlength="6">
+      </div>
+      <div class="name-field">
+        <label class="red">红方选手</label>
+        <input type="text" id="redName" value="红方" maxlength="6">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="confirmNames()">确认入场</button>
+  </div>
+</div>
+
+<!-- ====== GAME PAGE ====== -->
+<div id="gamePage">
+  <div class="game-title-bar">答题大作战</div>
+  <div class="health-bar-container">
+    <div class="health-section">
+      <div class="player-name blue" id="bluePlayerName">蓝方</div>
+      <div class="score-display blue" id="blueScore">0</div>
+      <div class="hp-bar-wrapper">
+        <div class="hp-bar blue" id="blueHpBar" style="width:100%"></div>
+        <div class="hp-text" id="blueHpText">100%</div>
+      </div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="health-section right">
+      <div class="player-name red" id="redPlayerName">红方</div>
+      <div class="score-display red" id="redScore">0</div>
+      <div class="hp-bar-wrapper">
+        <div class="hp-bar red" id="redHpBar" style="width:100%"></div>
+        <div class="hp-text" id="redHpText">100%</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="characters-area">
+    <div class="character" id="blueChar">
+      <svg class="char-svg" viewBox="0 0 120 185">
+        <defs>
+          <linearGradient id="blueBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
+          <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
+          <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#374151"/><stop offset="100%" stop-color="#111827"/></linearGradient>
+          <linearGradient id="pantsGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+        </defs>
+        <ellipse cx="60" cy="179" rx="32" ry="6" fill="rgba(0,0,0,0.2)"/>
+        <rect x="38" y="126" width="16" height="42" rx="6" fill="url(#pantsGrad)"/>
+        <rect x="66" y="126" width="16" height="42" rx="6" fill="url(#pantsGrad)"/>
+        <path d="M33 162 Q33 169 46 169 Q51 169 51 162 L51 158 L33 158 Z" fill="#dc2626"/>
+        <path d="M69 162 Q69 169 82 169 Q87 169 87 162 L87 158 L69 158 Z" fill="#dc2626"/>
+        <rect x="30" y="70" width="60" height="58" rx="11" fill="url(#blueBody)"/>
+        <path d="M40 70 L60 85 L80 70" fill="#1e40af" stroke="#1e40af" stroke-width="2"/>
+        <path d="M44 70 L60 81 L76 70" fill="white" opacity="0.9"/>
+        <rect x="30" y="122" width="60" height="7" rx="3" fill="#92400e"/>
+        <rect x="55" y="122" width="10" height="7" rx="2" fill="#fbbf24"/>
+        <rect x="10" y="74" width="22" height="12" rx="6" fill="url(#blueBody)"/>
+        <rect x="0" y="74" width="16" height="12" rx="6" fill="url(#blueBody)"/>
+        <ellipse cx="5" cy="80" rx="8" ry="7" fill="#fbbf24"/>
+        <ellipse cx="5" cy="80" rx="5" ry="4" fill="#f59e0b"/>
+        <rect x="88" y="76" width="20" height="12" rx="6" fill="url(#blueBody)"/>
+        <ellipse cx="110" cy="82" rx="8" ry="7" fill="#fbbf24"/>
+        <ellipse cx="110" cy="82" rx="5" ry="4" fill="#f59e0b"/>
+        <circle cx="60" cy="46" r="28" fill="url(#skinGrad)"/>
+        <path d="M32 40 Q32 14 60 8 Q88 14 88 40 Q84 26 60 20 Q36 26 32 40Z" fill="url(#hairGrad)"/>
+        <path d="M38 24 L46 0 L54 22" fill="url(#hairGrad)"/>
+        <path d="M54 18 L62 -4 L70 18" fill="url(#hairGrad)"/>
+        <path d="M70 22 L80 -2 L88 24" fill="url(#hairGrad)"/>
+        <rect x="32" y="34" width="56" height="7" rx="3" fill="#ef4444"/>
+        <path d="M86 36 Q96 32 100 38" stroke="#ef4444" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M87 40 Q98 38 103 44" stroke="#ef4444" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="48" cy="46" rx="5.5" ry="6" fill="white"/>
+        <ellipse cx="72" cy="46" rx="5.5" ry="6" fill="white"/>
+        <circle cx="49" cy="46" r="3.5" fill="#1e293b"/>
+        <circle cx="73" cy="46" r="3.5" fill="#1e293b"/>
+        <circle cx="50" cy="45" r="1.2" fill="white"/>
+        <circle cx="74" cy="45" r="1.2" fill="white"/>
+        <path d="M42 38 Q48 35 54 38" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M66 38 Q72 35 78 38" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M50 56 Q60 64 70 56" stroke="#92400e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    
+    <div class="character" id="redChar">
+      <svg class="char-svg" viewBox="0 0 120 185">
+        <defs>
+          <linearGradient id="redBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+          <linearGradient id="skinGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
+          <linearGradient id="hairGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#92400e"/><stop offset="100%" stop-color="#78350f"/></linearGradient>
+          <linearGradient id="skirtGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#991b1b"/></linearGradient>
+        </defs>
+        <ellipse cx="60" cy="179" rx="32" ry="6" fill="rgba(0,0,0,0.2)"/>
+        <rect x="40" y="132" width="14" height="34" rx="6" fill="url(#skinGrad2)"/>
+        <rect x="66" y="132" width="14" height="34" rx="6" fill="url(#skinGrad2)"/>
+        <path d="M35 162 Q35 169 47 169 Q52 169 52 162 L52 158 L35 158 Z" fill="#ec4899"/>
+        <path d="M68 162 Q68 169 80 169 Q85 169 85 162 L85 158 L68 158 Z" fill="#ec4899"/>
+        <rect x="30" y="70" width="60" height="54" rx="11" fill="url(#redBody)"/>
+        <path d="M32 70 L60 87 L88 70" fill="white" stroke="#dc2626" stroke-width="1.5"/>
+        <path d="M36 72 L60 84 L84 72" stroke="#dc2626" stroke-width="1" fill="none"/>
+        <path d="M40 70 L60 82 L80 70" fill="white" opacity="0.6"/>
+        <circle cx="60" cy="79" r="3" fill="#fbbf24"/>
+        <path d="M55 79 L60 85 L65 79" fill="#fbbf24"/>
+        <path d="M26 120 Q26 132 60 136 Q94 132 94 120 L90 120 Q90 128 60 130 Q30 128 30 120 Z" fill="url(#skirtGrad)"/>
+        <path d="M44 120 L42 132" stroke="#991b1b" stroke-width="1" opacity="0.5"/>
+        <path d="M60 120 L60 134" stroke="#991b1b" stroke-width="1" opacity="0.5"/>
+        <path d="M76 120 L78 132" stroke="#991b1b" stroke-width="1" opacity="0.5"/>
+        <rect x="10" y="76" width="22" height="12" rx="6" fill="url(#redBody)"/>
+        <ellipse cx="8" cy="82" rx="8" ry="7" fill="#fbbf24"/>
+        <ellipse cx="8" cy="82" rx="5" ry="4" fill="#f59e0b"/>
+        <rect x="88" y="74" width="22" height="12" rx="6" fill="url(#redBody)"/>
+        <rect x="106" y="74" width="14" height="12" rx="6" fill="url(#redBody)"/>
+        <ellipse cx="114" cy="80" rx="8" ry="7" fill="#fbbf24"/>
+        <ellipse cx="114" cy="80" rx="5" ry="4" fill="#f59e0b"/>
+        <circle cx="60" cy="46" r="28" fill="url(#skinGrad2)"/>
+        <path d="M32 40 Q30 10 60 4 Q90 10 88 40 Q84 24 60 18 Q36 24 32 40Z" fill="url(#hairGrad2)"/>
+        <path d="M32 38 Q24 52 22 78 Q20 92 26 86 Q30 72 34 54Z" fill="url(#hairGrad2)"/>
+        <path d="M88 38 Q96 52 98 78 Q100 92 94 86 Q90 72 86 54Z" fill="url(#hairGrad2)"/>
+        <ellipse cx="36" cy="24" rx="8" ry="5" fill="#fbbf24" transform="rotate(-20,36,24)"/>
+        <ellipse cx="46" cy="22" rx="8" ry="5" fill="#fbbf24" transform="rotate(15,46,22)"/>
+        <circle cx="41" cy="25" r="3" fill="#f59e0b"/>
+        <rect x="32" y="32" width="56" height="6" rx="3" fill="#fbbf24"/>
+        <ellipse cx="48" cy="46" rx="6.5" ry="7.5" fill="white"/>
+        <ellipse cx="72" cy="46" rx="6.5" ry="7.5" fill="white"/>
+        <circle cx="49" cy="47" r="4" fill="#1e293b"/>
+        <circle cx="73" cy="47" r="4" fill="#1e293b"/>
+        <circle cx="51" cy="45" r="1.5" fill="white"/>
+        <circle cx="75" cy="45" r="1.5" fill="white"/>
+        <path d="M40 39 Q44 37 47 38" stroke="#1e293b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M73 38 Q76 37 80 39" stroke="#1e293b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="38" cy="54" rx="5" ry="2.5" fill="rgba(252,165,165,0.5)"/>
+        <ellipse cx="82" cy="54" rx="5" ry="2.5" fill="rgba(252,165,165,0.5)"/>
+        <path d="M53 57 Q60 65 67 57" stroke="#92400e" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+  
+  <div class="question-area" id="questionArea">
+    <div class="waiting-text" id="waitingText">请两位选手准备抢答！</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options-grid" id="optionsGrid" style="display:none"></div>
+    <div class="correct-answer-display" id="correctAnswerDisplay"></div>
+  </div>
+  
+  <div class="bottom-area" id="bottomArea">
+    <button class="buzz-btn blue-buzz" id="buzzBlue" onclick="buzzIn('blue')">抢答</button>
+    <div class="center-btns">
+      <button class="submit-btn" id="submitBtn" disabled onclick="submitAnswer()">提交答案</button>
+      <button class="exit-btn" onclick="exitGame()">退出</button>
+      <button class="recover-btn" id="recoverBtn" onclick="recoverGame()">🔄 恢复</button>
+    </div>
+    <button class="buzz-btn red-buzz" id="buzzRed" onclick="buzzIn('red')">抢答</button>
+  </div>
+  
+  <div class="answer-indicator" id="answerIndicator"></div>
+</div>
+
+<!-- ====== COUNTDOWN OVERLAY ====== -->
+<div class="countdown-overlay" id="countdownOverlay">
+  <div class="countdown-number" id="countdownNumber"></div>
+</div>
+
+<!-- ====== RESULT OVERLAY ====== -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-text" id="resultText"></div>
+  <div class="result-sub" id="resultSub"></div>
+  <button class="btn btn-primary" onclick="backToMain()">返回首页</button>
+  <button class="btn btn-gold" style="margin-top:10px" onclick="restartGame()">再来一局</button>
+</div>
+
+<script>
+// ====== 禁止右键菜单，防止课堂上学生误触 ======
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+// ====== DATA STRUCTURE ======
+// packs: { "默认题包": [{text, options, answer}, ...], "地理知识": [...], ... }
+let packs = {};
+let currentPackName = '';
+let currentQuestion = 0;
+let blueHp = 100, redHp = 100, blueScore = 0, redScore = 0;
+let currentBuzzer = null, selectedOption = null;
+let gameActive = false, buzzLocked = false;
+let buzzTimestamps = { blue: 0, red: 0 };
+const BUZZ_WINDOW_MS = 50;
+let buzzCooldown = false; // 防连点冷却
+
+function buzzIn(side) {
+  if (!gameActive || buzzLocked || buzzCooldown) return;
+  
+  // 防连点：设置500ms冷却
+  buzzCooldown = true;
+  setTimeout(() => { buzzCooldown = false; }, 500);
+  
+  // 第一个按下立即锁定，不用等对方
+  buzzLocked = true;
+  const btn = document.getElementById(side === 'blue' ? 'buzzBlue' : 'buzzRed');
+  const otherBtn = document.getElementById(side === 'blue' ? 'buzzRed' : 'buzzBlue');
+  btn.disabled = true;
+  otherBtn.disabled = true;
+  
+  // 显示谁抢到了
+  const name = document.getElementById(side === 'blue' ? 'bluePlayerName' : 'redPlayerName').textContent;
+  const indicator = document.getElementById('answerIndicator');
+  indicator.textContent = `${name} 抢答成功！`;
+  indicator.className = 'answer-indicator ' + (side === 'blue' ? 'correct' : 'correct');
+  indicator.style.color = side === 'blue' ? 'var(--blue-glow)' : 'var(--red-glow)';
+  indicator.style.display = 'block';
+  indicator.style.animation = 'none';
+  indicator.offsetHeight;
+  indicator.style.animation = 'indicatorPop 0.5s ease-out';
+  
+  setTimeout(() => {
+    indicator.style.display = 'none';
+    resolveBuzz(side);
+  }, 800);
+}
+function loadPacks() {
+  const saved = localStorage.getItem('quizBattlePacks');
+  if (saved) {
+    packs = JSON.parse(saved);
+  }
+  // Ensure at least one pack
+  const names = Object.keys(packs);
+  if (names.length === 0) {
+    packs['默认题包'] = [];
+  }
+  currentPackName = Object.keys(packs)[0];
+  savePacks();
+  updateQuestionCount();
+}
+
+function savePacks() {
+  localStorage.setItem('quizBattlePacks', JSON.stringify(packs));
+  updateQuestionCount();
+}
+
+function getCurrentQuestions() {
+  return packs[currentPackName] || [];
+}
+
+function updateQuestionCount() {
+  const el = document.getElementById('questionCount');
+  const q = getCurrentQuestions();
+  const sets = Math.floor(q.length / 9);
+  const totalPacks = Object.keys(packs).length;
+  if (el) {
+    if (q.length === 0) {
+      el.textContent = `共 ${totalPacks} 个题包，当前题包无题目，请先录入`;
+    } else {
+      el.textContent = `共 ${totalPacks} 个题包 | 当前题包 ${q.length} 题（${sets} 局）${q.length % 9 > 0 ? '，还差 ' + (9 - q.length % 9) + ' 题凑整局' : ''}`;
+    }
+  }
+  const label = document.getElementById('qCountLabel');
+  if (label) label.textContent = `${currentPackName}：共 ${q.length} 题（${sets} 局）`;
+  const packInfo = document.getElementById('packInfo');
+  if (packInfo) {
+    const allNames = Object.keys(packs);
+    packInfo.textContent = `共 ${allNames.length} 个题包：` + allNames.map(n => {
+      const len = packs[n].length;
+      return `${n}(${len}题)`;
+    }).join('、');
+  }
+}
+
+function refreshPackSelect() {
+  const sel = document.getElementById('packSelect');
+  const gameSel = document.getElementById('gamePackSelect');
+  sel.innerHTML = Object.keys(packs).map(n =>
+    `<option value="${n}" ${n === currentPackName ? 'selected' : ''}>${n}（${packs[n].length}题）</option>`
+  ).join('');
+  if (gameSel) {
+    gameSel.innerHTML = Object.keys(packs).map(n =>
+      `<option value="${n}">${n}（${packs[n].length}题）</option>`
+    ).join('');
+  }
+}
+
+function switchPack() {
+  currentPackName = document.getElementById('packSelect').value;
+  savePacks();
+  renderQuestionList();
+}
+
+function addPack() {
+  const input = document.getElementById('newPackName');
+  const name = input.value.trim();
+  if (!name) { alert('请输入题包名称'); return; }
+  if (packs[name]) { alert('该题包已存在'); return; }
+  packs[name] = [];
+  currentPackName = name;
+  input.value = '';
+  savePacks();
+  refreshPackSelect();
+  renderQuestionList();
+}
+
+function deletePack() {
+  const names = Object.keys(packs);
+  if (names.length <= 1) { alert('至少保留一个题包'); return; }
+  if (!confirm(`确定删除题包"${currentPackName}"吗？所有题目将丢失！`)) return;
+  delete packs[currentPackName];
+  currentPackName = Object.keys(packs)[0];
+  savePacks();
+  refreshPackSelect();
+  renderQuestionList();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.qm-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.qm-panel').forEach(p => p.classList.remove('active'));
+  if (tab === 'edit') {
+    document.querySelectorAll('.qm-tab')[0].classList.add('active');
+    document.getElementById('editPanel').classList.add('active');
+  } else {
+    document.querySelectorAll('.qm-tab')[1].classList.add('active');
+    document.getElementById('importPanel').classList.add('active');
+  }
+}
+
+function openQuestionManager() {
+  document.getElementById('questionManager').style.display = 'block';
+  refreshPackSelect();
+  renderQuestionList();
+  switchTab('edit');
+}
+
+function closeQuestionManager() {
+  document.getElementById('questionManager').style.display = 'none';
+  updateQuestionCount();
+}
+
+function renderQuestionList() {
+  const container = document.getElementById('questionList');
+  const questions = getCurrentQuestions();
+  if (questions.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">当前题包暂无题目，请点击上方添加或切换到"批量导入"</div>';
+    return;
+  }
+  container.innerHTML = questions.map((q, i) => `
+    <div class="question-card">
+      <div class="q-num">第 ${i+1} 题</div>
+      <button class="delete-q" onclick="deleteQuestion(${i})">✕</button>
+      <textarea class="q-textarea" placeholder="题目内容" onchange="updateQ(${i},'text',this.value)">${q.text}</textarea>
+      <div class="option-row"><span class="opt-label opt-a">A</span><input placeholder="选项A" value="${q.options[0]||''}" onchange="updateOpt(${i},0,this.value)"></div>
+      <div class="option-row"><span class="opt-label opt-b">B</span><input placeholder="选项B" value="${q.options[1]||''}" onchange="updateOpt(${i},1,this.value)"></div>
+      <div class="option-row"><span class="opt-label opt-c">C</span><input placeholder="选项C" value="${q.options[2]||''}" onchange="updateOpt(${i},2,this.value)"></div>
+      <div class="option-row"><span class="opt-label opt-d">D</span><input placeholder="选项D" value="${q.options[3]||''}" onchange="updateOpt(${i},3,this.value)"></div>
+      <div class="answer-select"><label>正确答案：</label><select onchange="updateQ(${i},'answer',this.value)">
+        <option value="A" ${q.answer==='A'?'selected':''}>A</option>
+        <option value="B" ${q.answer==='B'?'selected':''}>B</option>
+        <option value="C" ${q.answer==='C'?'selected':''}>C</option>
+        <option value="D" ${q.answer==='D'?'selected':''}>D</option>
+      </select></div>
+    </div>
+  `).join('');
+}
+
+function addQuestion() {
+  packs[currentPackName].push({ text: '', options: ['', '', '', ''], answer: 'A' });
+  savePacks(); refreshPackSelect(); renderQuestionList();
+  document.getElementById('questionList').lastElementChild.scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteQuestion(i) { packs[currentPackName].splice(i, 1); savePacks(); refreshPackSelect(); renderQuestionList(); }
+function updateQ(i, field, value) { packs[currentPackName][i][field] = value; savePacks(); }
+function updateOpt(i, optIndex, value) { packs[currentPackName][i].options[optIndex] = value; savePacks(); }
+
+function clearAllQuestions() {
+  if (confirm('确定清空当前题包的所有题目吗？')) {
+    packs[currentPackName] = [];
+    savePacks(); refreshPackSelect(); renderQuestionList();
+  }
+}
+
+function importQuestions() {
+  const text = document.getElementById('importText').value.trim();
+  if (!text) return;
+  const lines = text.split('\n').filter(l => l.trim());
+  let count = 0;
+  lines.forEach(line => {
+    const parts = line.split('|');
+    if (parts.length >= 6) {
+      const answer = parts[5].trim().toUpperCase();
+      if (['A','B','C','D'].includes(answer)) {
+        packs[currentPackName].push({
+          text: parts[0].trim(),
+          options: [parts[1].trim(), parts[2].trim(), parts[3].trim(), parts[4].trim()],
+          answer
+        });
+        count++;
+      }
+    }
+  });
+  savePacks(); refreshPackSelect(); renderQuestionList();
+  document.getElementById('importText').value = '';
+  alert(`成功导入 ${count} 道题到"${currentPackName}"！`);
+}
+
+function loadSampleQuestions() {
+  const samples = [
+    { text: '地球上最大的海洋是？', options: ['大西洋', '太平洋', '印度洋', '北冰洋'], answer: 'B' },
+    { text: '光年是什么单位？', options: ['时间单位', '距离单位', '速度单位', '质量单位'], answer: 'B' },
+    { text: '"床前明月光"的作者是？', options: ['杜甫', '白居易', '李白', '王维'], answer: 'C' },
+    { text: '水的化学式是？', options: ['CO2', 'H2O', 'O2', 'NaCl'], answer: 'B' },
+    { text: '中国最长的河流是？', options: ['黄河', '珠江', '长江', '淮河'], answer: 'C' },
+    { text: '1千米等于多少米？', options: ['100', '500', '1000', '10000'], answer: 'C' },
+    { text: '太阳系中最大的行星是？', options: ['地球', '木星', '土星', '天王星'], answer: 'B' },
+    { text: '"春眠不觉晓"的下一句是？', options: ['处处闻啼鸟', '夜来风雨声', '花落知多少', '明月来相照'], answer: 'A' },
+    { text: '人体最大的器官是？', options: ['心脏', '肝脏', '皮肤', '大脑'], answer: 'C' }
+  ];
+  packs[currentPackName] = packs[currentPackName].concat(samples);
+  savePacks(); refreshPackSelect(); renderQuestionList();
+  alert(`已添加9道示例题到"${currentPackName}"！`);
+}
+
+// ====== GAME FLOW ======
+function startGame() {
+  refreshPackSelect();
+  const gameSel = document.getElementById('gamePackSelect');
+  // Check if selected pack has enough questions
+  const selPack = gameSel.value;
+  if (!selPack || packs[selPack].length < 9) {
+    alert(`题包"${selPack || currentPackName}"只有 ${(selPack ? packs[selPack] : getCurrentQuestions()).length} 道题，至少需要9道才能开始！`);
+    return;
+  }
+  document.getElementById('nameOverlay').style.display = 'flex';
+}
+
+function confirmNames() {
+  const blueName = document.getElementById('blueName').value.trim() || '蓝方';
+  const redName = document.getElementById('redName').value.trim() || '红方';
+  const selectedPack = document.getElementById('gamePackSelect').value;
+  
+  if (!selectedPack || packs[selectedPack].length < 9) {
+    alert('所选题包题目不足9道！');
+    return;
+  }
+  
+  document.getElementById('bluePlayerName').textContent = blueName;
+  document.getElementById('redPlayerName').textContent = redName;
+  document.getElementById('nameOverlay').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'none';
+  document.getElementById('gamePage').style.display = 'flex';
+  
+  // Use the selected pack
+  window.gamePackName = selectedPack;
+  resetGameState();
+  updateUI();
+  startCountdown();
+}
+
+function resetGameState() {
+  blueHp = 100; redHp = 100; blueScore = 0; redScore = 0;
+  currentQuestion = 0; currentBuzzer = null; selectedOption = null;
+  gameActive = true; buzzLocked = false;
+  buzzTimestamps = { blue: 0, red: 0 };
+  
+  const pool = [...packs[window.gamePackName]];
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  window.currentGameQuestions = pool.slice(0, 9);
+}
+
+function startCountdown() {
+  const overlay = document.getElementById('countdownOverlay');
+  const numberEl = document.getElementById('countdownNumber');
+  overlay.style.display = 'flex';
+  let count = 3;
+  function showCount() {
+    if (count > 0) {
+      numberEl.className = 'countdown-number c' + count;
+      numberEl.textContent = count;
+      numberEl.style.animation = 'none';
+      numberEl.offsetHeight;
+      numberEl.style.animation = 'countdownPop 0.8s ease-out';
+      count--;
+      setTimeout(showCount, 900);
+    } else {
+      numberEl.className = 'countdown-number go';
+      numberEl.textContent = '开始！';
+      numberEl.style.animation = 'none';
+      numberEl.offsetHeight;
+      numberEl.style.animation = 'countdownPop 0.8s ease-out';
+      setTimeout(() => { overlay.style.display = 'none'; showQuestionDirect(); }, 800);
+    }
+  }
+  showCount();
+}
+
+function showQuestion() {
+  if (blueScore >= 5 || redScore >= 5 || blueHp <= 0 || redHp <= 0 || currentQuestion >= 9) {
+    endGame(); return;
+  }
+  const q = window.currentGameQuestions[currentQuestion];
+  document.getElementById('questionText').textContent = `第${currentQuestion + 1}题：${q.text}`;
+  
+  const optLabels = ['A', 'B', 'C', 'D'];
+  const optColors = ['opt-a', 'opt-b', 'opt-c', 'opt-d'];
+  const grid = document.getElementById('optionsGrid');
+  grid.style.display = 'none';
+  grid.innerHTML = q.options.map((opt, i) => `
+    <button class="option-btn" onclick="selectOption(${i})" disabled>
+      <span class="opt-circle ${optColors[i]}">${optLabels[i]}</span>
+      <span>${opt}</span>
+    </button>
+  `).join('');
+  
+  currentBuzzer = null; selectedOption = null;
+  buzzLocked = false; buzzTimestamps = { blue: 0, red: 0 };
+  
+  document.getElementById('waitingText').style.display = 'block';
+  document.getElementById('questionText').style.display = 'none';
+  document.getElementById('buzzBlue').disabled = false;
+  document.getElementById('buzzRed').disabled = false;
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('correctAnswerDisplay').style.display = 'none';
+  document.getElementById('blueChar').className = 'character';
+  document.getElementById('redChar').className = 'character';
+}
+
+// 倒计时结束后直接出题+选项+开启抢答
+function showQuestionDirect() {
+  if (blueScore >= 5 || redScore >= 5 || blueHp <= 0 || redHp <= 0 || currentQuestion >= 9) {
+    endGame(); return;
+  }
+  const q = window.currentGameQuestions[currentQuestion];
+  document.getElementById('questionText').textContent = `第${currentQuestion + 1}题：${q.text}`;
+  
+  const optLabels = ['A', 'B', 'C', 'D'];
+  const optColors = ['opt-a', 'opt-b', 'opt-c', 'opt-d'];
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = q.options.map((opt, i) => `
+    <button class="option-btn" onclick="selectOption(${i})" disabled>
+      <span class="opt-circle ${optColors[i]}">${optLabels[i]}</span>
+      <span>${opt}</span>
+    </button>
+  `).join('');
+  
+  currentBuzzer = null; selectedOption = null;
+  buzzLocked = false; buzzTimestamps = { blue: 0, red: 0 };
+  
+  document.getElementById('waitingText').style.display = 'none';
+  document.getElementById('questionText').style.display = 'block';
+  grid.style.display = 'grid';
+  document.getElementById('buzzBlue').disabled = false;
+  document.getElementById('buzzRed').disabled = false;
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('correctAnswerDisplay').style.display = 'none';
+  document.getElementById('blueChar').className = 'character';
+  document.getElementById('redChar').className = 'character';
+}
+
+function resolveBuzz(winner) {
+  currentBuzzer = winner;
+  document.getElementById('buzzBlue').disabled = true;
+  document.getElementById('buzzRed').disabled = true;
+  document.getElementById('waitingText').style.display = 'none';
+  document.getElementById('questionText').style.display = 'block';
+  
+  const grid = document.getElementById('optionsGrid');
+  grid.style.display = 'grid';
+  grid.querySelectorAll('.option-btn').forEach(btn => btn.disabled = false);
+  
+  document.getElementById('submitBtn').style.display = 'inline-block';
+  document.getElementById('submitBtn').disabled = true;
+  
+  const nameEl = document.getElementById(winner === 'blue' ? 'bluePlayerName' : 'redPlayerName');
+  nameEl.style.transform = 'scale(1.3)';
+  setTimeout(() => { nameEl.style.transform = 'scale(1)'; }, 400);
+}
+
+function selectOption(index) {
+  if (!currentBuzzer) return;
+  selectedOption = index;
+  document.getElementById('optionsGrid').querySelectorAll('.option-btn').forEach((btn, i) => btn.classList.toggle('selected', i === index));
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function submitAnswer() {
+  if (selectedOption === null || !currentBuzzer) return;
+  const grid = document.getElementById('optionsGrid');
+  grid.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+  document.getElementById('submitBtn').disabled = true;
+  
+  const q = window.currentGameQuestions[currentQuestion];
+  const correctIndex = q.answer.charCodeAt(0) - 65;
+  const isCorrect = selectedOption === correctIndex;
+  
+  grid.querySelectorAll('.option-btn').forEach((btn, i) => {
+    if (i === correctIndex) btn.classList.add('correct');
+    if (i === selectedOption && !isCorrect) btn.classList.add('wrong');
+  });
+  
+  showAnswerIndicator(isCorrect);
+  
+  if (isCorrect) {
+    if (currentBuzzer === 'blue') { blueScore++; redHp = Math.max(0, redHp - 20); playAttackAnimation('blue'); }
+    else { redScore++; blueHp = Math.max(0, blueHp - 20); playAttackAnimation('red'); }
+    // 同步积分到工具箱：答对+3分
+    const winnerName = document.getElementById(currentBuzzer === 'blue' ? 'bluePlayerName' : 'redPlayerName').textContent;
+    if(winnerName && window.parent && window.parent !== window)
+      window.parent.postMessage({source:'toolbox2',type:'addPoints',name:winnerName,delta:3},'*');
+  } else {
+    document.getElementById('correctAnswerDisplay').textContent = `正确答案：${q.answer}. ${q.options[correctIndex]}`;
+    document.getElementById('correctAnswerDisplay').style.display = 'block';
+    if (currentBuzzer === 'blue') { blueHp = Math.max(0, blueHp - 20); playAttackAnimation('red'); }
+    else { redHp = Math.max(0, redHp - 20); playAttackAnimation('blue'); }
+  }
+  updateUI();
+  
+  if (blueHp <= 0 || redHp <= 0) { setTimeout(() => endGame(), 1800); return; }
+  setTimeout(() => {
+    currentQuestion++;
+    if (blueScore >= 5 || redScore >= 5 || currentQuestion >= 9) endGame();
+    else nextRoundCountdown();
+  }, 2200);
+}
+
+function showAnswerIndicator(isCorrect) {
+  const indicator = document.getElementById('answerIndicator');
+  indicator.textContent = isCorrect ? '回答正确！' : '回答错误！';
+  indicator.className = 'answer-indicator ' + (isCorrect ? 'correct' : 'wrong');
+  indicator.style.display = 'block';
+  indicator.style.animation = 'none';
+  indicator.offsetHeight;
+  indicator.style.animation = 'indicatorPop 0.5s ease-out';
+  setTimeout(() => { indicator.style.display = 'none'; }, 1500);
+}
+
+function playAttackAnimation(attacker) {
+  const defender = attacker === 'blue' ? 'red' : 'blue';
+  const attackerChar = document.getElementById(attacker === 'blue' ? 'blueChar' : 'redChar');
+  const defenderChar = document.getElementById(defender === 'blue' ? 'blueChar' : 'redChar');
+  
+  const attackerRect = attackerChar.getBoundingClientRect();
+  const defenderRect = defenderChar.getBoundingClientRect();
+  const startX = attackerRect.left + attackerRect.width * 0.7;
+  const startY = attackerRect.top + attackerRect.height * 0.3;
+  const endX = defenderRect.left + defenderRect.width * 0.3;
+  const endY = defenderRect.top + defenderRect.height * 0.3;
+  
+  attackerChar.classList.add(attacker === 'blue' ? 'attack-left' : 'attack-right');
+  
+  setTimeout(() => {
+    const projectile = document.createElement('div');
+    projectile.style.cssText = `position:fixed;width:28px;height:28px;border-radius:50%;z-index:100;pointer-events:none;left:${startX-14}px;top:${startY-14}px;`;
+    if (attacker === 'blue') {
+      projectile.style.background = 'radial-gradient(circle,#93c5fd,#3b82f6,#1d4ed8)';
+      projectile.style.boxShadow = '0 0 16px #3b82f6,0 0 32px rgba(59,130,246,0.4),0 0 4px white inset';
+    } else {
+      projectile.style.background = 'radial-gradient(circle,#fca5a5,#ef4444,#b91c1c)';
+      projectile.style.boxShadow = '0 0 16px #ef4444,0 0 32px rgba(239,68,68,0.4),0 0 4px white inset';
+    }
+    document.body.appendChild(projectile);
+    
+    const trailInterval = setInterval(() => {
+      const trail = document.createElement('div');
+      const px = parseFloat(projectile.style.left)+14, py = parseFloat(projectile.style.top)+14;
+      trail.style.cssText = `position:fixed;width:10px;height:10px;border-radius:50%;z-index:99;pointer-events:none;left:${px-5}px;top:${py-5}px;background:${attacker==='blue'?'rgba(59,130,246,0.6)':'rgba(239,68,68,0.6)'};animation:trailFade 0.4s ease-out forwards;`;
+      document.body.appendChild(trail);
+      setTimeout(() => trail.remove(), 400);
+    }, 30);
+    
+    const duration = 380, startTime = performance.now();
+    function animateProjectile(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 2);
+      projectile.style.left = startX + (endX - startX) * eased - 14 + 'px';
+      projectile.style.top = startY + (endY - startY) * eased - Math.sin(progress * Math.PI) * 40 - 14 + 'px';
+      if (progress < 1) requestAnimationFrame(animateProjectile);
+      else {
+        clearInterval(trailInterval);
+        projectile.remove();
+        createImpact(endX, endY, attacker);
+        defenderChar.classList.add('hit');
+        const gp = document.getElementById('gamePage');
+        gp.style.animation = 'screenShake 0.3s ease-out';
+        setTimeout(() => { gp.style.animation = ''; }, 300);
+      }
+    }
+    requestAnimationFrame(animateProjectile);
+  }, 200);
+  
+  setTimeout(() => {
+    attackerChar.classList.remove('attack-left', 'attack-right');
+    defenderChar.classList.remove('hit');
+  }, 1300);
+}
+
+function createImpact(x, y, attacker) {
+  const ring = document.createElement('div');
+  ring.style.cssText = `position:fixed;left:${x-30}px;top:${y-30}px;width:60px;height:60px;border-radius:50%;z-index:100;pointer-events:none;border:3px solid ${attacker==='blue'?'#60a5fa':'#f87171'};background:${attacker==='blue'?'rgba(59,130,246,0.3)':'rgba(239,68,68,0.3)'};animation:impactBurst 0.5s ease-out forwards;`;
+  document.body.appendChild(ring);
+  setTimeout(() => ring.remove(), 500);
+  for (let i = 0; i < 8; i++) {
+    const spark = document.createElement('div');
+    const angle = (i / 8) * Math.PI * 2, dist = 25 + Math.random() * 20;
+    spark.style.cssText = `position:fixed;left:${x-3}px;top:${y-3}px;width:6px;height:6px;border-radius:50%;z-index:101;pointer-events:none;background:${attacker==='blue'?'#93c5fd':'#fca5a5'};box-shadow:0 0 4px ${attacker==='blue'?'#3b82f6':'#ef4444'};`;
+    spark.style.setProperty('--dx', Math.cos(angle)*dist+'px');
+    spark.style.setProperty('--dy', Math.sin(angle)*dist+'px');
+    spark.style.animation = 'sparkleFly 0.4s ease-out forwards';
+    document.body.appendChild(spark);
+    setTimeout(() => spark.remove(), 400);
+  }
+}
+
+function nextRoundCountdown() {
+  const overlay = document.getElementById('countdownOverlay');
+  const numberEl = document.getElementById('countdownNumber');
+  overlay.style.display = 'flex';
+  let count = 3;
+  function showCount() {
+    if (count > 0) {
+      numberEl.className = 'countdown-number c' + count;
+      numberEl.textContent = count;
+      numberEl.style.animation = 'none';
+      numberEl.offsetHeight;
+      numberEl.style.animation = 'countdownPop 0.6s ease-out';
+      count--;
+      setTimeout(showCount, 700);
+    } else {
+      overlay.style.display = 'none';
+      showQuestionDirect();
+    }
+  }
+  showCount();
+}
+
+function updateUI() {
+  document.getElementById('blueHpBar').style.width = blueHp + '%';
+  document.getElementById('redHpBar').style.width = redHp + '%';
+  document.getElementById('blueHpText').textContent = blueHp + '%';
+  document.getElementById('redHpText').textContent = redHp + '%';
+  document.getElementById('blueHpBar').classList.toggle('low', blueHp <= 40);
+  document.getElementById('redHpBar').classList.toggle('low', redHp <= 40);
+  document.getElementById('blueScore').textContent = blueScore;
+  document.getElementById('redScore').textContent = redScore;
+}
+
+function endGame() {
+  gameActive = false;
+  let blueWin = blueScore >= 5 || redHp <= 0;
+  let redWin = redScore >= 5 || blueHp <= 0;
+  if (blueWin && redWin) { blueWin = blueScore >= redScore; redWin = redScore > blueScore; }
+  const draw = !blueWin && !redWin;
+  
+  if (blueWin) { document.getElementById('blueChar').classList.add('victory'); document.getElementById('redChar').classList.add('defeat'); createSparkles('blue'); }
+  else if (redWin) { document.getElementById('redChar').classList.add('victory'); document.getElementById('blueChar').classList.add('defeat'); createSparkles('red'); }
+  
+  setTimeout(() => {
+    document.getElementById('resultOverlay').style.display = 'flex';
+    const text = document.getElementById('resultText');
+    const sub = document.getElementById('resultSub');
+    if (draw) { text.textContent = '平局！'; text.className = 'result-text'; sub.textContent = `蓝方 ${blueScore} : ${redScore} 红方`; }
+    else if (blueWin) { text.textContent = document.getElementById('bluePlayerName').textContent + ' 获胜！'; text.className = 'result-text win'; sub.textContent = `${blueScore} : ${redScore}`; }
+    else { text.textContent = document.getElementById('redPlayerName').textContent + ' 获胜！'; text.className = 'result-text win'; sub.textContent = `${blueScore} : ${redScore}`; }
+  }, 1200);
+}
+
+function createSparkles(side) {
+  const colors = side === 'blue' ? ['#3b82f6','#60a5fa','#93c5fd','#fbbf24','#ffffff'] : ['#ef4444','#f87171','#fca5a5','#fbbf24','#ffffff'];
+  const charEl = document.getElementById(side === 'blue' ? 'blueChar' : 'redChar');
+  const rect = charEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 25; i++) {
+    setTimeout(() => {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+      sparkle.style.left = cx + 'px'; sparkle.style.top = cy + 'px';
+      sparkle.style.width = sparkle.style.height = (4 + Math.random() * 8) + 'px';
+      const angle = Math.random() * Math.PI * 2, distance = 40 + Math.random() * 120;
+      sparkle.style.setProperty('--dx', Math.cos(angle)*distance+'px');
+      sparkle.style.setProperty('--dy', Math.sin(angle)*distance+'px');
+      sparkle.style.animation = `sparkleFly ${0.5+Math.random()*0.5}s ease-out forwards`;
+      document.body.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 1200);
+    }, i * 40);
+  }
+}
+
+function exitGame() {
+  if (confirm('确定退出当前对战吗？')) {
+    gameActive = false;
+    document.getElementById('resultOverlay').style.display = 'none';
+    document.getElementById('countdownOverlay').style.display = 'none';
+    document.getElementById('gamePage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'flex';
+    document.getElementById('blueChar').className = 'character';
+    document.getElementById('redChar').className = 'character';
+  }
+}
+
+function backToMain() {
+  document.getElementById('resultOverlay').style.display = 'none';
+  document.getElementById('gamePage').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'flex';
+  document.getElementById('blueChar').className = 'character';
+  document.getElementById('redChar').className = 'character';
+}
+
+function restartGame() {
+  // Check if current game pack still has enough questions
+  const packName = window.gamePackName;
+  if (!packs[packName] || packs[packName].length < 9) {
+    alert('题目数量不够，请添加题目！');
+    document.getElementById('resultOverlay').style.display = 'none';
+    document.getElementById('gamePage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'flex';
+    document.getElementById('blueChar').className = 'character';
+    document.getElementById('redChar').className = 'character';
+    return;
+  }
+  document.getElementById('resultOverlay').style.display = 'none';
+  document.getElementById('blueChar').className = 'character';
+  document.getElementById('redChar').className = 'character';
+  resetGameState();
+  updateUI();
+  startCountdown();
+}
+
+// ====== INIT ======
+loadPacks();
+
+// ====== 异常恢复机制 ======
+let lastActivityTime = Date.now();
+let recoverCheckInterval = null;
+
+function markActivity() { lastActivityTime = Date.now(); }
+// 监听所有用户操作
+['click','keydown','touchstart'].forEach(evt => {
+  document.addEventListener(evt, markActivity);
+});
+
+function recoverGame() {
+  // 强制重置当前题目状态，不退出游戏
+  buzzLocked = false;
+  buzzCooldown = false;
+  currentBuzzer = null;
+  selectedOption = null;
+  buzzTimestamps = { blue: 0, red: 0 };
+  
+  document.getElementById('buzzBlue').disabled = false;
+  document.getElementById('buzzRed').disabled = false;
+  document.getElementById('recoverBtn').style.display = 'none';
+  
+  // 重新出题
+  showQuestionDirect();
+}
+
+// 检测卡死：如果15秒内没有任何操作且游戏处于活跃状态，显示恢复按钮
+recoverCheckInterval = setInterval(() => {
+  const gamePage = document.getElementById('gamePage');
+  if (gamePage.style.display === 'flex' && gameActive) {
+    const elapsed = Date.now() - lastActivityTime;
+    if (elapsed > 15000 && !currentBuzzer) {
+      document.getElementById('recoverBtn').style.display = 'inline-block';
+    }
+  }
+}, 3000);
+
+// ====== Background particles ======
+(function() {
+  const gp = document.getElementById('gamePage');
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'bg-particle';
+    p.style.width = p.style.height = (15 + Math.random() * 35) + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = Math.random() * 100 + '%';
+    p.style.background = Math.random() > 0.5 ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)';
+    p.style.animation = `floatParticle ${5+Math.random()*10}s ease-in-out infinite`;
+    p.style.animationDelay = `-${Math.random()*5}s`;
+    gp.appendChild(p);
+  }
+})();
+
+// ===== 工具箱积分同步 =====
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.source !== 'toolbox2') return;
+  // 预留：接收工具箱初始化消息
+  if (e.data.type === 'init' && e.data.data) {
+    // 抢答游戏使用玩家名而非选中学生，暂不处理
+  }
+});
+</script>
+</body>
+</html>
