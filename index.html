@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="情侣法庭 H5，填写恋爱纠纷案情，生成沙雕情侣吵架判决书。"
+    />
+    <title>情侣法庭 - 恋爱纠纷判决书</title>
+    <link rel="stylesheet" href="./couple-court.css?v=sentence-1" />
+  </head>
+  <body>
+    <main class="court-app" aria-live="polite">
+      <section class="screen home-screen is-active" id="homeScreen" aria-labelledby="homeTitle">
+        <div class="phone-frame">
+          <div class="status-bar" aria-hidden="true">
+            <span>9:41</span>
+            <span class="status-icons">5G  ▰</span>
+          </div>
+
+          <div class="court-hall" aria-hidden="true">
+            <span class="falling-paper paper-a">判</span>
+            <span class="falling-paper paper-b">案</span>
+            <span class="falling-paper paper-c">审</span>
+            <div class="spotlight"></div>
+            <div class="judge-seat">
+              <div class="court-badge">❤</div>
+              <div class="judge-cat">
+                <span class="ear left"></span>
+                <span class="ear right"></span>
+                <span class="face">严</span>
+              </div>
+            </div>
+            <div class="couple plaintiff">不服</div>
+            <div class="couple defendant">委屈</div>
+          </div>
+
+          <header class="home-copy">
+            <p class="pretitle">恋爱纠纷，一判到底</p>
+            <h1 id="homeTitle">今日开庭</h1>
+            <p>把吵架变成一次体面又好笑的正式宣判。</p>
+          </header>
+
+          <article class="case-file tilted" aria-label="恋爱纠纷案预览">
+            <div class="file-redline"></div>
+            <p class="case-number">案号：2026-LA-0520</p>
+            <h2>恋爱纠纷立案通知书</h2>
+            <dl>
+              <div><dt>原告</dt><dd>正在委屈的一方</dd></div>
+              <div><dt>被告</dt><dd>求生欲待补考的一方</dd></div>
+              <div><dt>案由</dt><dd>情侣日常生存规则争议</dd></div>
+            </dl>
+            <strong class="stamp preview-stamp">准予开庭</strong>
+          </article>
+
+          <button class="primary-btn stamp-btn" id="startBtn" type="button">
+            <span>立即起诉 TA</span>
+          </button>
+
+          <div class="case-ticker" aria-label="热门案例">
+            <div class="ticker-track">
+              <span>张某因偷吃女友布丁，被判连续 3 天送奶茶。</span>
+              <span>李某因已读不回，被剥夺游戏权 48 小时。</span>
+              <span>王某因说“随便”，被判今晚主动安排约会。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen form-screen" id="formScreen" aria-labelledby="formTitle">
+        <div class="phone-frame light-frame">
+          <div class="top-bar">
+            <button class="icon-btn" data-go="home" type="button" aria-label="返回首页">‹</button>
+            <h1 id="formTitle">案情登记</h1>
+            <span class="mini-seal">诉</span>
+          </div>
+
+          <ol class="step-bar" aria-label="审理进度">
+            <li class="is-current">案情登记</li>
+            <li>法院审理</li>
+            <li>宣判结果</li>
+          </ol>
+
+          <form class="court-form" id="caseForm">
+            <section class="paper-panel">
+              <h2><span>1</span> 谁是原告？</h2>
+              <div class="name-grid">
+                <label>
+                  <small>原告昵称</small>
+                  <input id="plaintiffName" name="plaintiffName" maxlength="8" placeholder="宝宝" value="宝宝" />
+                </label>
+                <label>
+                  <small>被告昵称</small>
+                  <input id="defendantName" name="defendantName" maxlength="8" placeholder="对象" value="对象" />
+                </label>
+              </div>
+              <div class="vs-row" aria-hidden="true">
+                <span class="avatar blue">原</span>
+                <b>VS</b>
+                <span class="avatar red">被</span>
+              </div>
+            </section>
+
+            <section class="paper-panel">
+              <h2><span>2</span> 核心罪名</h2>
+              <div class="crime-grid" id="crimeGrid"></div>
+            </section>
+
+            <section class="paper-panel">
+              <h2><span>3</span> 导火索</h2>
+              <textarea
+                id="triggerText"
+                maxlength="42"
+                placeholder="请陈述案发经过，例如：说打完这把就睡，结果天都亮了。"
+              >偷吃了我最后一块布丁</textarea>
+              <div class="field-count"><span id="triggerCount">11</span>/42</div>
+            </section>
+
+            <section class="paper-panel">
+              <h2><span>4</span> 原告诉求</h2>
+              <textarea
+                id="sentenceRequest"
+                maxlength="48"
+                placeholder="想让本院怎么判？例如：罚被告带我去吃饭，并主动买单。"
+              >罚被告带我去吃饭，并主动买单。</textarea>
+              <div class="quick-sentences" aria-label="快速判决诉求">
+                <button type="button" data-sentence="罚被告带我去吃饭，并主动买单。">带我吃饭</button>
+                <button type="button" data-sentence="罚被告连续 2 天使用温柔语气，不得出现“呵呵”“随便”。">温柔说话</button>
+                <button type="button" data-sentence="罚被告今晚主动抱抱，并请喝全糖奶茶。">抱抱奶茶</button>
+              </div>
+              <div class="field-count"><span id="sentenceCount">17</span>/48</div>
+            </section>
+
+            <section class="paper-panel severity-panel">
+              <h2><span>5</span> 情节严重程度</h2>
+              <div class="severity-copy">
+                <span>小作一下</span>
+                <strong id="severityLabel">需要哄</strong>
+                <span>准备分手</span>
+              </div>
+              <input id="severityRange" class="severity-range" type="range" min="1" max="5" value="3" />
+            </section>
+
+            <button class="primary-btn submit-btn" type="submit">提交法院审理</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="screen loading-screen" id="loadingScreen" aria-labelledby="loadingTitle">
+        <div class="phone-frame dark-frame">
+          <div class="court-loader" aria-hidden="true">
+            <div class="loader-light"></div>
+            <div class="bench">
+              <span class="gavel">▰</span>
+              <strong>恋爱最高法院</strong>
+            </div>
+            <div class="stamp-hit">啪！</div>
+          </div>
+          <h1 id="loadingTitle">法院审理中...</h1>
+          <p id="loadingText">正在核实聊天记录...</p>
+          <div class="progress-shell"><i id="progressBar"></i></div>
+          <strong class="progress-number"><span id="progressNumber">0</span>%</strong>
+        </div>
+      </section>
+
+      <section class="screen verdict-screen" id="verdictScreen" aria-labelledby="verdictTitle">
+        <div class="phone-frame verdict-frame">
+          <div class="top-bar verdict-top">
+            <button class="icon-btn" data-go="form" type="button" aria-label="重新登记">‹</button>
+            <h1 id="verdictTitle">宣判时刻</h1>
+            <button class="icon-btn text-icon" id="posterBtn" type="button" aria-label="切换海报">报</button>
+          </div>
+
+          <article class="judgement" id="judgementCard">
+            <header>
+              <span class="court-logo">⚖</span>
+              <p>恋爱最高法院</p>
+              <h2>判 决 书</h2>
+              <small id="caseNo">案号：2026-LA-0520</small>
+            </header>
+
+            <dl class="identity-list">
+              <div><dt>原告</dt><dd id="resultPlaintiff">宝宝</dd></div>
+              <div><dt>被告</dt><dd id="resultDefendant">对象</dd></div>
+              <div><dt>罪名</dt><dd id="resultCrime">偷吃零食罪</dd></div>
+              <div><dt>导火索</dt><dd id="resultTrigger">偷吃了我最后一块布丁</dd></div>
+            </dl>
+
+            <section class="verdict-body">
+              <h3 id="verdictHeading">关于“情侣零食纠纷案”判决如下：</h3>
+              <p>
+                经本院审理查明，被告存在
+                <strong id="crimeNameInline">偷吃零食罪</strong>
+                等违法恋爱行为，严重伤害原告情绪价值，并对家庭零食储备造成不可逆心理阴影。
+              </p>
+              <div class="sentence-box">
+                <h4>主刑</h4>
+                <p id="mainSentence">罚连续 3 天主动买奶茶，并上交第一口选择权。</p>
+              </div>
+              <div class="sentence-box">
+                <h4>附加刑</h4>
+                <p id="extraSentence">今晚必须主动抱抱，语气温柔，不得敷衍。</p>
+              </div>
+              <div class="sentence-box">
+                <h4>缓刑条件</h4>
+                <p id="probationSentence">若主动亲亲并写 20 字悔过小作文，可减刑一半。</p>
+              </div>
+              <p class="final-line">本判决为终审判决。立即执行。</p>
+            </section>
+
+            <footer>
+              <strong class="stamp final-stamp" id="finalStamp">有罪</strong>
+              <p>审判长：喵法官</p>
+              <time id="verdictDate">2026年5月20日</time>
+            </footer>
+          </article>
+
+          <article class="poster-card" id="posterCard" hidden>
+            <p class="poster-slogan">家人们谁懂啊，今天正式开庭了！</p>
+            <div class="mini-judgement">
+              <h2>情侣法庭判决书</h2>
+              <p id="posterCrime">被告因偷吃零食罪，被判主动请喝奶茶。</p>
+              <strong class="stamp">有罪</strong>
+            </div>
+            <div class="qr-block" aria-label="二维码占位">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <p>扫码即可起诉你的另一半</p>
+          </article>
+
+          <nav class="share-actions" aria-label="传播操作">
+            <button type="button" id="sendBtn">发给 TA</button>
+            <button type="button" id="shareBtn">生成海报</button>
+            <button type="button" id="retryBtn">重新开庭</button>
+          </nav>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="poster-modal" id="posterModal" hidden>
+      <div class="poster-modal-backdrop" data-close-poster></div>
+      <section class="poster-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="posterModalTitle">
+        <div class="poster-modal-head">
+          <div>
+            <h2 id="posterModalTitle">长图海报</h2>
+            <p>长按图片可保存到相册，再发朋友圈。</p>
+          </div>
+          <button class="icon-btn" type="button" data-close-poster aria-label="关闭海报">×</button>
+        </div>
+        <img id="posterPreviewImg" alt="情侣法庭长图海报预览" />
+        <div class="poster-modal-actions">
+          <button class="poster-action primary" id="savePosterBtn" type="button">保存图片</button>
+          <button class="poster-action" id="copyPosterBtn" type="button">复制文案</button>
+        </div>
+      </section>
+    </div>
+    <script src="./html2canvas.min.js"></script>
+    <script src="./couple-court.js?v=sentence-1"></script>
+  </body>
+</html>
